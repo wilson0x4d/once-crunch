@@ -19,7 +19,7 @@ RUN chmod 600 /root/.ssh/*
 RUN echo "deb http://ftp.us.debian.org/debian bookworm main non-free" > /etc/apt/sources.list.d/non-free.list && \
     dpkg --add-architecture i386 && \
     apt-get -y update && \
-    apt-get -y install software-properties-common && \
+    apt-get -y install software-properties-common apt-transport-https && \
     apt-get -y upgrade
 
 # gnupg (optional, for commit signing or pulling from the private repo)
@@ -28,7 +28,8 @@ RUN apt-get -y install git ssh gnupg && if [ `stat --printf="%s" /root/git-signi
 
 # quality of life tools (optional)
 RUN apt-get -y install aptitude wget nano tmux htop man && \
-    echo "alias ll='ls -alh --color=auto'" > /root/.bashrc
+echo "set-option -g default-shell /bin/bash" >> /root/.tmux.conf && \
+echo "alias ll='ls -alh --color=auto'" >> /root/.bashrc
 
 # pvrtextool (for texture conversion)
 #
@@ -68,15 +69,18 @@ RUN apt-get -y install build-essential gcc-multilib g++-multilib zlib1g-dev libl
 RUN apt-get -y install clang llvm lld lldb
 RUN apt-get -y install python3 python3-venv python3-virtualenv python3-poetry
 
-# scripts (required)
-RUN git clone $ONCE_CRUNCH_REMOTE /root/code/once-crunch
+# Once Crunch (required, scripts/tools)
+RUN git clone $ONCE_CRUNCH_REMOTE /root/code/once-crunch && \
+RUN chmod 777 /root/code/once-crunch/install-pwsh.sh && \
+    /root/code/once-crunch/install-pwsh.sh && \
+    rm /root/code/once-crunch/install-pwsh.sh
 
-# quickbms (for using BMS scripts written by others)
+# quickbms (required, for executing bms scripts)
 #
-# NOTE: i build from source, and, i build a privately
-# maintained version. i mirror to github for public
+# NOTE: we build from source, and, we build a privately
+# maintained version. we mirror to github for public
 # access and issues, but it is only a mirror. if you
-# find a bug or want to contribute ping me on Discord.
+# find a bug or want to contribute just ping on Discord.
 #
 RUN git clone $QUICKBMS_REMOTE /root/code/quickbms && \
     cd /root/code/quickbms && \
