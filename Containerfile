@@ -48,7 +48,9 @@ RUN chmod 700 /root/deps/PVRTexToolSetup && \
 #
 RUN echo steam steam/question select "I AGREE" | debconf-set-selections && \
     echo steam steam/license note '' | debconf-set-selections && \
-    apt-get -y install steamcmd
+    apt-get -y install steamcmd && \
+    ln -s /usr/games/steamcmd /usr/local/bin/steamcmd && \
+    steamcmd +quit
 
 # tools (required)
 #
