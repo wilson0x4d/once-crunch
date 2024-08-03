@@ -1,0 +1,4 @@
+ssh/
+deps/
+git-signing-keys.gpg
+gitconfig
