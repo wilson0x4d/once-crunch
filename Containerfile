@@ -1,7 +1,11 @@
+# SPDX-FileCopyrightText: 2024 Shaun Wilson
+# SPDX-License-Identifier: MIT
+#
 # i've been using debian for probably 20 years and
 # this is just a personal preference. using bookworm
 # (deb-12) for stable ports, broad support, and
 # third-party compatibility
+#
 FROM debian:bookworm
 ARG ONCE_CRUNCH_REMOTE
 ARG QUICKBMS_REMOTE

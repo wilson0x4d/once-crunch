@@ -1,4 +1,6 @@
 #!/bin/bash
+# SPDX-FileCopyrightText: 2023 Shaun Wilson
+# SPDX-License-Identifier: MIT
 #
 # Copyright (C) 2023 Shaun Wilson
 #
