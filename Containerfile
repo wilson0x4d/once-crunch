@@ -71,14 +71,17 @@ RUN apt-get -y install python3 python3-venv python3-virtualenv python3-poetry
 # scripts (required)
 RUN git clone $ONCE_CRUNCH_REMOTE /root/code/once-crunch
 
-# # quickbms (for using BMS scripts written by others)
-# #
-# # NOTE: i build from source, and, i build a privately
-# # maintained version. i mirror to github for public
-# # access and issues, but it is only a mirror.
-# #
-# RUN git clone $QUICKBMS_REMOTE /root/code/quickbms && \
-#     cd /root/code/quickbms/src && \
-#     make
+# quickbms (for using BMS scripts written by others)
+#
+# NOTE: i build from source, and, i build a privately
+# maintained version. i mirror to github for public
+# access and issues, but it is only a mirror. if you
+# find a bug or want to contribute ping me on Discord.
+#
+RUN git clone $QUICKBMS_REMOTE /root/code/quickbms && \
+    cd /root/code/quickbms && \
+    make --jobs && \
+    make install && \
+    make clean
 
 # TODO: default exec for non-interactive mode
