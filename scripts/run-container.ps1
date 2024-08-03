@@ -17,10 +17,21 @@ if ([String]::IsNullOrWhiteSpace($DataDir)) {
     $context = $pwd.Path
     $DataDir = [IO.Path]::GetFullPath("$context/..")
     Write-Warning "You did not provide a -DataDir argument.`nThe data directory is defaulted to: `n$DataDir"
-    Start-Sleep -Seconds 5
+    Start-Sleep -Seconds 3
 }
+$ArgList = @(
+    "run", 
+    "--rm", 
+    "-v", "$DataDir`:/data", 
+    "-e", "DISPLAY=$(@([Net.DNS]::GetHostAddresses([Environment]::MachineName) | Where-Object { $_.AddressFamily -eq "InterNetwork" })[0].ToString()):0"
+)
+
 if ($NonInteractive.IsPresent) {
-    podman run --rm -it -v "$DataDir`:/data" localhost/once-crunch:latest
+    $ArgList += "localhost/once-crunch:latest"
+    Start-Process "podman" -ArgumentList $ArgList -NoNewWindow
 } else {
-    podman run --rm -it -v "$DataDir`:/data" localhost/once-crunch:latest /bin/tmux
+    $ArgList += "-it"
+    $ArgList += "localhost/once-crunch:latest"
+    $ArgList += "/bin/tmux"
+    Start-Process "podman" -ArgumentList $ArgList -NoNewWindow -Wait
 }

@@ -63,19 +63,18 @@ RUN echo steam steam/question select "I AGREE" | debconf-set-selections && \
 # - imagemagick
 # - compression
 #
-RUN apt-get -y install buildah skopeo
+RUN apt-get -y install buildah skopeo qemu-user-static
 RUN apt-get -y install imagemagick
 RUN apt-get -y install git ssh
-RUN apt-get -y install bzip2 zstd lzop
+RUN apt-get -y install bzip2 zstd lzop xz-utils 7zip
 RUN apt-get -y install build-essential gcc-multilib g++-multilib zlib1g-dev liblzo2-dev libssl-dev unicode
 RUN apt-get -y install clang llvm lld lldb
 RUN apt-get -y install python3 python3-venv python3-virtualenv python3-poetry
 
 # Once Crunch (required, scripts/tools)
 RUN git clone $ONCE_CRUNCH_REMOTE /root/code/once-crunch && \
-RUN chmod 777 /root/code/once-crunch/install-pwsh.sh && \
-    /root/code/once-crunch/install-pwsh.sh && \
-    rm /root/code/once-crunch/install-pwsh.sh
+    chmod 777 /root/code/once-crunch/scripts/install-pwsh.sh && \
+    /root/code/once-crunch/scripts/install-pwsh.sh
 
 # quickbms (required, for executing bms scripts)
 #

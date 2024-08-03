@@ -20,6 +20,9 @@ param(
 # most people can just ignore these.
 #
 $context = $pwd.Path
+if ([string]::IsNullOrWhiteSpace($env:HOME)) {
+    $env:HOME = $env:USERPROFILE
+}
 
 if ($Force.IsPresent) {
     # these things only update if they do not already exist in the container context
@@ -39,24 +42,24 @@ if ($IncludeSecureResources.IsPresent) {
     # development inside the container.
     #
     if (![IO.Directory]::Exists("$context/ssh")) {
-        if (![IO.Directory]::Exists("$env:USERPROFILE/.ssh")) {
+        if (![IO.Directory]::Exists("$env:HOME/.ssh")) {
             Write-Error "You forgot your ssh keys."
             return
         }
-        Copy-Item -Recurse $env:USERPROFILE/.ssh $context/ssh
+        Copy-Item -Recurse $env:HOME/.ssh $context/ssh
     }
     if (![IO.File]::Exists("$context/git-signing-keys.gpg")) {
-        if (![IO.File]::Exists("$env:USERPROFILE/git-signing-keys.gpg")) {
+        if (![IO.File]::Exists("$env:HOME/git-signing-keys.gpg")) {
             Write-Error "You forgot your signing keys."
             return
         }
         #
         # this file will ONLY exist if you've explicitly created it
         #
-        Copy-Item "$env:USERPROFILE/git-signing-keys.gpg" $context/git-signing-keys.gpg
+        Copy-Item "$env:HOME/git-signing-keys.gpg" $context/git-signing-keys.gpg
     }
     if (![IO.File]::Exists("$context/gitconfig")) {
-        if (![IO.File]::Exists("$env:USERPROFILE/.gitconfig")) {
+        if (![IO.File]::Exists("$env:HOME/.gitconfig")) {
             Write-Error "You forgot your global git config."
             return
         }
@@ -66,7 +69,7 @@ if ($IncludeSecureResources.IsPresent) {
         # you can, obviously, point this at a custom config
         # or `touch gitconfig` before running this script to not copy yours in.
         #
-        Copy-Item $env:USERPROFILE/.gitconfig $context/gitconfig
+        Copy-Item $env:HOME/.gitconfig $context/gitconfig
     }
 } else {
     # if present, empty ~/.ssh will be created, which is fine
@@ -85,24 +88,19 @@ if ($IncludeSecureResources.IsPresent) {
 #
 mkdir -p "$context/deps" 2>&1 | Out-Null
 if (![IO.File]::Exists("$context/deps/PVRTexToolSetup")) {
-    Copy-item "$env:USERPROFILE\Downloads\PVRTexToolSetup-2024_R1.run-x64" "$context/deps/PVRTexToolSetup"
-} else {
-    # you didn't have this, so you're going to get a stub so the container will at least build.
-    Write-Output "#/!bin/sh
-echo '# you missed a step'
-echo '# this is a required third-party dependency. download'
-echo '# it yourself and make sure the name here matches'
-echo '# your downloaded filename. i only tested with 2024_R1'
-echo '#'
-echo '# https://developer.imaginationtech.com/downloads/'
-echo '#'
-    " > "$context/deps/test"
+    if (![IO.File]::Exists("$env:HOME/Downloads/PVRTexToolSetup-2024_R1.run-x64")) {
+        Write-Error "Setup file for PVRTexTool not found."
+        Write-Error "Download from: https://developer.imaginationtech.com/downloads/"
+        Write-Error "Copy into $HOME/Downloads with name: PVRTexToolSetup-2024_R1.run-x64"
+        return
+    }
+    Copy-item "$env:HOME/Downloads/PVRTexToolSetup-2024_R1.run-x64" "$context/deps/PVRTexToolSetup"
 }
 
 # build the container
 $once_crunch_remote = $(git remote get-url origin) # avoiding a hardcode
 $quickbms_remote = $once_crunch_remote.Replace("once-crunch", "quickbms") # avoiding a hardcode
-Start-Process -NoNewWindow -Wait -FilePath "podman.exe" -ArgumentList @(
+Start-Process -NoNewWindow -Wait -FilePath "podman" -ArgumentList @(
     "build",
     "--arch", "amd64",
     "--os", "linux",
