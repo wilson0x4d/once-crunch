@@ -2,8 +2,9 @@
 # SPDX-FileCopyrightText: 2024 Shaun Wilson
 # SPDX-License-Identifier: MIT
 param(
-    [switch]$IncludeSecureResources,
-    [switch]$Force
+    [switch]$Dev,
+    [switch]$Force,
+    [switch]$UseCache
 )
 
 # DISCLAIMER
@@ -26,22 +27,25 @@ if ([string]::IsNullOrWhiteSpace($env:HOME)) {
     $env:HOME = $env:USERPROFILE
 }
 
+# causes problems, requires removal
+Remove-Item -Recurse -Force ".venv/" 2>&1 | Out-Null
+
 if ($Force.IsPresent) {
     # these things only update if they do not already exist in the container context
     Remove-Item -Recurse -Force "$context/ssh" 2>&1 | Out-Null
     Remove-Item -Force "$context/git-signing-keys.gpg" 2>&1 | Out-Null
     Remove-Item -Force "$context/gitconfig" 2>&1 | Out-Null
     Remove-Item -Recurse -Force "$context/deps" 2>&1 | Out-Null
-    # and sometimes i need to force the image itself to rebuild.
-    podman image rm --force localhost/once-crunch 2>&1 | Out-Null
 }
 
-if ($IncludeSecureResources.IsPresent) {
+if ($Dev.IsPresent) {
     #
     # if you don't want these copied you obviously
-    # should not pass `-IncludeSecureResources` switch
-    # to script. they're only useful if you're doing
-    # development inside the container.
+    # should not pass `-Dev` switch to script.
+    #
+    # it is for when you're doing development
+    # inside the container and need access to
+    # sensitive development resources.
     #
     if (![IO.Directory]::Exists("$context/ssh")) {
         if (![IO.Directory]::Exists("$env:HOME/.ssh")) {
@@ -73,7 +77,8 @@ if ($IncludeSecureResources.IsPresent) {
         #
         Copy-Item $env:HOME/.gitconfig $context/gitconfig
     }
-} else {
+}
+else {
     # if present, empty ~/.ssh will be created, which is fine
     mkdir -p "$context/ssh" 2>&1 | Out-Null
     echo "" > "$context/ssh/not-configured"
@@ -102,8 +107,15 @@ if (![IO.File]::Exists("$context/deps/PVRTexToolSetup")) {
 # build the container
 $once_crunch_remote = $(git remote get-url origin) # avoiding a hardcode
 $quickbms_remote = $once_crunch_remote.Replace("once-crunch", "quickbms") # avoiding a hardcode
+$cache_control = "--no-cache"
+$cache_control_opt = "--squash-all"
+if ($UseCache.IsPresent -and !$Force.IsPresent) {
+    $cache_control = "--cache-ttl"
+    $cache_control_opt = "7200s"
+}
 Start-Process -NoNewWindow -Wait -FilePath "podman" -ArgumentList @(
     "build",
+    $cache_control, $cache_control_opt,
     "--arch", "amd64",
     "--os", "linux",
     "--build-arg", "ONCE_CRUNCH_REMOTE=$once_crunch_remote",

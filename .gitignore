@@ -1,4 +1,6 @@
+.venv/
 ssh/
 deps/
 *.gpg
 gitconfig
+__pycache__

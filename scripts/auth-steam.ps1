@@ -10,6 +10,6 @@ if ([string]::IsNullOrWhiteSpace($AccountName)) {
     return
 }
 # give steam a chance to update before proceeding to use it
-steamcmd +quit 2>&1 |Out-Null 
+steamcmd +quit 2>&1 | Out-Null 
 # perform login, the auth state is cached (credentials are not stored)
 steamcmd +login $AccountName +quit

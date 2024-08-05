@@ -7,12 +7,14 @@ param(
     [parameter()]
     [string]$DataDir,
     [parameter()]
-    [string]$LaunchTarget = "/bin/tmux"
+    [string]$LaunchTarget,
+    [parameter()]
+    [string]$ContainerName = "ci-once-crunch"
 )
 if ([String]::IsNullOrWhiteSpace($DataDir)) {
     # when not specified the datadir defaults to the
     # directory just above the git repo. this is a
-    # personal convenience so i can access the 
+    # personal convenie nce so i can access the 
     # repo from within the container (rather than)
     # the ephemeral snapshot pulled during container
     # creation.
@@ -25,15 +27,25 @@ $ArgList = @(
     "run", 
     "--rm", 
     "-v", "$DataDir`:/data", 
-    "-e", "DISPLAY=$(@([Net.DNS]::GetHostAddresses([Environment]::MachineName) | Where-Object { $_.AddressFamily -eq "InterNetwork" })[0].ToString()):0"
+    "-e", "DISPLAY=$(@([Net.DNS]::GetHostAddresses([Environment]::MachineName) | Where-Object { $_.AddressFamily -eq "InterNetwork" })[0].ToString()):0",
+    "--name", "$ContainerName"
 )
 
 if ($NonInteractive.IsPresent) {
     $ArgList += "localhost/once-crunch:latest"
+    $ArgList += "/bin/bash"
+    $ArgList += "-c"
+    $ArgList += "sys/activate-daemon.sh"
     Start-Process "podman" -ArgumentList $ArgList -NoNewWindow
+} elseif ([string]::IsNullOrWhiteSpace($LaunchTarget)) {
+    $ArgList += "-it"
+    $ArgList += "localhost/once-crunch:latest"
+    $ArgList += "/usr/local/bin/poetry"
+    $ArgList += "shell"
+    Start-Process "podman" -ArgumentList $ArgList -NoNewWindow -Wait
 } else {
     $ArgList += "-it"
     $ArgList += "localhost/once-crunch:latest"
-    $ArgList += "/bin/tmux"
+    $ArgList += $LaunchTarget
     Start-Process "podman" -ArgumentList $ArgList -NoNewWindow -Wait
 }

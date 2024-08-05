@@ -1,0 +1,13 @@
+[tool.poetry]
+package-mode = false
+description = "A containerized toolchain for data mining games."
+authors = ["Shaun Wilson <mrshaunwilson@msn.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
