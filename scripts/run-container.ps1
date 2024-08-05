@@ -40,8 +40,9 @@ if ($NonInteractive.IsPresent) {
 } elseif ([string]::IsNullOrWhiteSpace($LaunchTarget)) {
     $ArgList += "-it"
     $ArgList += "localhost/once-crunch:latest"
-    $ArgList += "/usr/local/bin/poetry"
-    $ArgList += "shell"
+    $ArgList += "/bin/bash"
+    $ArgList += "--rcfile"
+    $ArgList += "sys/with-venv.sh"
     Start-Process "podman" -ArgumentList $ArgList -NoNewWindow -Wait
 } else {
     $ArgList += "-it"
