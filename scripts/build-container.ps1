@@ -1,5 +1,5 @@
 #!/bin/pwsh
-# SPDX-FileCopyrightText: 2024 Shaun Wilson
+# SPDX-FileCopyrightText: © 2024 Shaun Wilson
 # SPDX-License-Identifier: MIT
 param(
     [switch]$Dev,
@@ -120,5 +120,6 @@ Start-Process -NoNewWindow -Wait -FilePath "podman" -ArgumentList @(
     "--os", "linux",
     "--build-arg", "ONCE_CRUNCH_REMOTE=$once_crunch_remote",
     "--build-arg", "QUICKBMS_REMOTE=$quickbms_remote",
+    "--build-arg", "MAKE_MAX_CONCURRENCY=$([Environment]::ProcessorCount)",
     "-t", "once-crunch",
     "$context")

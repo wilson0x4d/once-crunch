@@ -1,8 +1,9 @@
-# SPDX-FileCopyrightText: 2024 Shaun Wilson
+# SPDX-FileCopyrightText: © 2024 Shaun Wilson
 # SPDX-License-Identifier: MIT
 FROM debian:bookworm
 ARG ONCE_CRUNCH_REMOTE
 ARG QUICKBMS_REMOTE
+ARG MAX_MAKE_JOBS=4
 ARG MPDECIMAL_VERSION=2.5.1
 
 # /root/.ssh and git-signing-keys.gpg are only necessary if you are working
@@ -103,13 +104,11 @@ RUN git clone $ONCE_CRUNCH_REMOTE /root/code/once-crunch
 #
 RUN git clone $QUICKBMS_REMOTE /root/code/quickbms && \
     cd /root/code/quickbms && \
-    make --jobs && \
+    make --jobs $MAX_MAKE_JOBS && \
     make install && \
     make clean
 
 # steamcmd (to download game files)
-#
-#
 RUN /root/sys/install-steamcmd.sh
 
 # finalize
