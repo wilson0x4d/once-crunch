@@ -3,7 +3,7 @@
 import argparse
 from dataclasses import dataclass
 import io
-import lz4.frame
+import lz4.block
 import os
 import struct
 import zlib
@@ -75,7 +75,7 @@ class NXPKFormatHandler(FormatHandler):
                 case 1: # zlib
                     data = zlib.decompress(data)
                 case 2: # lz4
-                    data = lz4.frame.decompress(data)
+                    data = lz4.block.decompress(data, uncompressed_size=entry['uncompressed_data_size'])
                 case 3: # zstd
                     data = zstd.decompress(data)
                 case _:
