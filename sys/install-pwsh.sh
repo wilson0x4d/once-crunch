@@ -1,8 +1,8 @@
 #!/bin/bash
-# SPDX-FileCopyrightText: 2023 Shaun Wilson
+# SPDX-FileCopyrightText: © 2023 Shaun Wilson
 # SPDX-License-Identifier: MIT
 #
-# Copyright (C) 2023 Shaun Wilson
+# Copyright (C) © 2023 Shaun Wilson
 #
 # this script is used to install `pwsh` inside a
 # container during image creation, it mainly solves

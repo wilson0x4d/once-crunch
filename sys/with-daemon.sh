@@ -1,5 +1,5 @@
 #!/bin/bash
-# SPDX-FileCopyrightText: 2023 Shaun Wilson
+# SPDX-FileCopyrightText: © 2024 Shaun Wilson
 # SPDX-License-Identifier: MIT
 ##
 set -eo pipefail

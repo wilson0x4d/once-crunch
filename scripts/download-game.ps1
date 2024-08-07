@@ -1,5 +1,5 @@
 #!/bin/pwsh
-# SPDX-FileCopyrightText: 2024 Shaun Wilson
+# SPDX-FileCopyrightText: © 2024 Shaun Wilson
 # SPDX-License-Identifier: MIT
 param(
     [Parameter(Mandatory = $true)]
