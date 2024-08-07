@@ -58,9 +58,9 @@ class NXPKFormatHandler(FormatHandler):
             filepath = os.path.join(args.DESTINATION, filename)
             # if file exists (and not args.force) skip this file
             if not args.force and os.path.exists(filepath):
-                _log.activity(f'[{i}/{self._header["table_entry_count"]}] .. skipping existing files')
+                _log.activity(f'[{i+1}/{self._header["table_entry_count"]}] .. skipping existing files')
                 continue
-            _log.activity(f'[{i}/{self._header["table_entry_count"]}] .. writing files')
+            _log.activity(f'[{i+1}/{self._header["table_entry_count"]}] .. writing files')
             entry = entry_table[i]
             self._file.seek(entry['data_offset'])
             data = self._file.read(entry['data_size'])
