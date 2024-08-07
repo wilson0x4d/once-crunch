@@ -88,6 +88,8 @@ RUN /root/sys/install-python.sh
 RUN /root/sys/install-pwsh.sh
 # pvrtextool (for texture conversion)
 RUN /root/sys/install-pvrtextool.sh
+# pycdc (for pyc decompilation)
+RUN /root/sys/install-pycdc.sh
 
 # llvm
 RUN apt-get -y install clang llvm lld lldb
