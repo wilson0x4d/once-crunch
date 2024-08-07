@@ -53,8 +53,6 @@ def execute(args: argparse.Namespace):
             return False
         else:
             os.remove(args.DESTINATION)
-    elif os.path.isdir(args.DESTINATION):
-        _log.warn(f'Destination directory `{args.DESTINATION}` already exists, reusing.')
     os.makedirs(args.DESTINATION, exist_ok=True)
     if not args.fileformat in _formatters:
         _log.error(f'Format not supported: {args.fileformat}')

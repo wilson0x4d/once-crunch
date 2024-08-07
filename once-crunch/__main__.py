@@ -38,8 +38,8 @@ if ("__main__" == __name__):
         if (args.verbose):
             _log.set_loglevel(LogLevel.TRACE)
         try_execute_command(args)
-
     except KeyboardInterrupt:
-        _log.info("^C\x1b[0J\r\a")
+        _log.info("^C\x1b[0J\r\n\n\a")
+        exit(0x4d)
     finally:
         _log.activity("\r\n")

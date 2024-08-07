@@ -40,7 +40,7 @@ class NXPKFormatHandler(FormatHandler):
             table_entry = self.read_entry(entry_offset)
             entry_table[entry_index] = table_entry
             entry_index += 1
-            _log.activity(f'[{entry_index}/{self._header["table_entry_count"]}] reading table entries')
+            _log.progress('reading table entries', entry_index, self._header['table_entry_count'])
         nxfn = self.decode_nxfn(self._header['table_offset'] + self._table_size, args)
         # TODO: add support for "map" files
         for i in range(len(entry_table)):
@@ -58,9 +58,9 @@ class NXPKFormatHandler(FormatHandler):
             filepath = os.path.join(args.DESTINATION, filename)
             # if file exists (and not args.force) skip this file
             if not args.force and os.path.exists(filepath):
-                _log.activity(f'[{i+1}/{self._header["table_entry_count"]}] .. skipping existing files')
+                _log.progress('skipping existing files', i+1, self._header["table_entry_count"])
                 continue
-            _log.activity(f'[{i+1}/{self._header["table_entry_count"]}] .. writing files')
+            _log.progress('writing files', i+1, self._header["table_entry_count"])
             entry = entry_table[i]
             self._file.seek(entry['data_offset'])
             data = self._file.read(entry['data_size'])
