@@ -17,7 +17,6 @@ def configure_help(subparsers: argparse._SubParsersAction):
         'unpack',
         description=f'{help}',
         help=help)
-    parser.add_argument('-f', '--force', action='store_true')
     # enumerate format handlers
     formats_package = importlib.import_module('..formats', 'once-crunch.commands')
     module_names = dir(formats_package)
@@ -42,6 +41,7 @@ def configure_help(subparsers: argparse._SubParsersAction):
     parser.add_argument('DESTINATION', help='the output directory')
 
 def execute(args: argparse.Namespace):
+    _log.info(f'..unpacking: {args.SOURCE}')
     # check SOURCE exists
     if not os.path.isfile(args.SOURCE):
         _log.error(f'File not found: {args.SOURCE}')
