@@ -36,5 +36,6 @@ class Logger:
         self.write(LogLevel.ERROR, f'\x1b[1;31m{message}')
     def activity(self, message: str):
         print(f'\x1b[0m{message}\x1b[0J', end = '\r')
-    def progress(self, message: str, value: float, max_value: float):
-        print(f'\x1b[0m[{value}/{max_value}] {round((value/max_value)*100.0,1)}% {message}\x1b[0J', end = '\r')
+    def progress(self, message: str, value: float, max_value: float, force:bool = False):
+        if force or (0 == value % 47):
+            print(f'\x1b[0m[{value}/{max_value}] {round((value/max_value)*100.0,1)}% {message}\x1b[0J', end = '\r')
