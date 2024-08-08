@@ -28,6 +28,7 @@ $ArgList = @(
     "--rm", 
     "-v", "$DataDir`:/data", 
     "-e", "DISPLAY=$(@([Net.DNS]::GetHostAddresses([Environment]::MachineName) | Where-Object { $_.AddressFamily -eq "InterNetwork" })[0].ToString()):0",
+    "--platform", "linux/amd64",
     "--name", "$ContainerName"
 )
 
