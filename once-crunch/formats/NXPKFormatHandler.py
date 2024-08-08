@@ -43,7 +43,7 @@ class NXPKFormatHandler(FormatHandler):
             table_entry = self.read_entry(entry_offset)
             entry_table[entry_index] = table_entry
             entry_index += 1
-            _log.progress(progress_msg, entry_index, self._header['table_entry_count'])
+            _log.progress(progress_msg, entry_index, self._header['table_entry_count'], False)
         nxfn = self.decode_nxfn(self._header['table_offset'] + self._table_size, args)
         # TODO: add support for "map" files
         for i in range(len(entry_table)):
@@ -62,10 +62,10 @@ class NXPKFormatHandler(FormatHandler):
             short_filename = filename.replace(f'{os.path.dirname(filename)}/', '')
             if not args.force and os.path.exists(filepath):
                 # if file exists (and not args.force) skip unpacking (would-be file will still be post-processed)
-                _log.progress(short_filename, i+1, self._header["table_entry_count"], True)
+                _log.progress(f'(unpack) {short_filename}', i+1, self._header["table_entry_count"])
                 pass
             else:
-                _log.progress(short_filename, i+1, self._header["table_entry_count"])
+                _log.progress(f'(extract) {short_filename}', i+1, self._header["table_entry_count"])
                 entry = entry_table[i]
                 self._file.seek(entry['data_offset'])
                 data = self._file.read(entry['data_size'])
@@ -90,11 +90,11 @@ class NXPKFormatHandler(FormatHandler):
             is_pvr = filepath.endswith('.pvr')
             if is_pvr:
                 if args.pvr2png:
-                    _log.progress(f'(pvr2png) {short_filename}', i+1, self._header["table_entry_count"], True)
+                    _log.progress(f'(pvr2png) {short_filename}', i+1, self._header["table_entry_count"])
                     filepath, existing_png = pvr2png(filepath, args.force)
                 if filepath.endswith('.png'):
                     if args.recolor or args.webp:
-                        _log.progress(f'(recolor) {short_filename}', i+1, self._header["table_entry_count"], True)
+                        _log.progress(f'(recolor) {short_filename}', i+1, self._header["table_entry_count"])
                         filepath = magick(filepath, {
                             'force': args.force,
                             'existing_png': existing_png,
