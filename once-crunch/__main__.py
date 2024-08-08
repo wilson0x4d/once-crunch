@@ -14,6 +14,9 @@ def configure():
         description='A toolchain for data mining games.')
     parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument('-f', '--force', action='store_true')
+    parser.add_argument('--pvr2png', action='store_true', help='Convert PVR files to PNG files.')
+    parser.add_argument('--recolor', action='store_true', help='Recolor supported images.')
+    parser.add_argument('--webp', action='store_true', help='Convert supported images to webp format.')
     # `commands` sub-parsers
     subparsers = parser.add_subparsers(title='commands',dest='command',required=True)
     commands_package = importlib.import_module('once-crunch.commands')
@@ -37,6 +40,7 @@ if ("__main__" == __name__):
         args = configure()
         if (args.verbose):
             _log.set_loglevel(LogLevel.TRACE)
+            _log.debug(args)
         try_execute_command(args)
     except KeyboardInterrupt:
         _log.info("^C\x1b[0J\r\n\n\a")

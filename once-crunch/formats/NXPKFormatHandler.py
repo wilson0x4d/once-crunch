@@ -11,6 +11,7 @@ import zstd
 from .FormatHandler import FormatHandler
 from .NXFNFormatHandler import NXFNFormatHandler
 from ..util.logging import Logger
+from ..util.imgtools import pvr2png, magick
 
 _log = Logger(__name__)
 
@@ -25,6 +26,7 @@ class NXPKFormatHandler(FormatHandler):
         return buf.startswith(b'NXPK')
     
     def decode(self, args: argparse.Namespace):
+        source_filename = args.SOURCE.replace(f'{os.path.dirname(args.SOURCE)}{os.path.sep}', '')
         dest = args.DESTINATION
         self._header = self.extract_header()
         self._table_entry_size = 28
@@ -36,11 +38,12 @@ class NXPKFormatHandler(FormatHandler):
         })
         entry_table = {}
         entry_index = 0
+        progress_msg = f'(indexing) {source_filename}'
         for entry_offset in range(self._header['table_offset'], self._table_size + self._header['table_offset'], self._table_entry_size):
             table_entry = self.read_entry(entry_offset)
             entry_table[entry_index] = table_entry
             entry_index += 1
-            _log.progress('reading table entries', entry_index, self._header['table_entry_count'])
+            _log.progress(progress_msg, entry_index, self._header['table_entry_count'])
         nxfn = self.decode_nxfn(self._header['table_offset'] + self._table_size, args)
         # TODO: add support for "map" files
         for i in range(len(entry_table)):
@@ -53,34 +56,52 @@ class NXPKFormatHandler(FormatHandler):
                 # when a name cannot be determined, generate a subdirectory name based on the input filename
                 # TODO: when generating a filename, use magic numbers to derive a file extension as well
                 filename = os.path.join(
-                    args.SOURCE.replace(f'{os.path.dirname}{os.path.sep}', ''), 
+                    source_filename, 
                     f'{i}')
             filepath = os.path.join(args.DESTINATION, filename)
-            # if file exists (and not args.force) skip this file
+            short_filename = filename.replace(f'{os.path.dirname(filename)}/', '')
             if not args.force and os.path.exists(filepath):
-                _log.progress('skipping existing files', i+1, self._header["table_entry_count"])
-                continue
-            _log.progress('writing files', i+1, self._header["table_entry_count"])
-            entry = entry_table[i]
-            self._file.seek(entry['data_offset'])
-            data = self._file.read(entry['data_size'])
-            match (entry['encryption_type']):
-                case 0: # none
-                    pass
-                case _:
-                    raise NotImplementedError(f'nxpk encryption type: {entry["encryption_type"]}')
-            match (entry['compression_type']):
-                case 0: # none
-                    pass
-                case 1: # zlib
-                    data = zlib.decompress(data)
-                case 2: # lz4
-                    data = lz4.block.decompress(data, uncompressed_size=entry['uncompressed_data_size'])
-                case 3: # zstd
-                    data = zstd.decompress(data)
-                case _:
-                    raise NotImplementedError(f'nxpk compression type: {entry["compression_type"]}')
-            self.save_binary(data, filepath, args.force)
+                # if file exists (and not args.force) skip unpacking (would-be file will still be post-processed)
+                _log.progress(short_filename, i+1, self._header["table_entry_count"], True)
+                pass
+            else:
+                _log.progress(short_filename, i+1, self._header["table_entry_count"])
+                entry = entry_table[i]
+                self._file.seek(entry['data_offset'])
+                data = self._file.read(entry['data_size'])
+                match (entry['encryption_type']):
+                    case 0: # none
+                        pass
+                    case _:
+                        raise NotImplementedError(f'nxpk encryption type: {entry["encryption_type"]}')
+                match (entry['compression_type']):
+                    case 0: # none
+                        pass
+                    case 1: # zlib
+                        data = zlib.decompress(data)
+                    case 2: # lz4
+                        data = lz4.block.decompress(data, uncompressed_size=entry['uncompressed_data_size'])
+                    case 3: # zstd
+                        data = zstd.decompress(data)
+                    case _:
+                        raise NotImplementedError(f'nxpk compression type: {entry["compression_type"]}')
+                self.save_binary(data, filepath, args.force)
+            # convert pvr -> png
+            is_pvr = filepath.endswith('.pvr')
+            if is_pvr:
+                if args.pvr2png:
+                    _log.progress(f'(pvr2png) {short_filename}', i+1, self._header["table_entry_count"], True)
+                    filepath, existing_png = pvr2png(filepath, args.force)
+                if filepath.endswith('.png'):
+                    if args.recolor or args.webp:
+                        _log.progress(f'(recolor) {short_filename}', i+1, self._header["table_entry_count"], True)
+                        filepath = magick(filepath, {
+                            'force': args.force,
+                            'existing_png': existing_png,
+                            'recolor': args.recolor,
+                            'webp': args.webp
+                        })
+            # TODO pyc -> py
 
     def decode_nxfn(self, offset:int, args: argparse.Namespace):
         nfxn_formatter = NXFNFormatHandler(self._file, offset)
