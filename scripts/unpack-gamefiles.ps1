@@ -8,21 +8,28 @@
 #
 # For the fastest export run with no options.
 # 
-# -Pvr2Png will dramatically increase export times.
+# -For PVR files, options such as -Png, -Webp, -Jpg, -ImageRecolor will incur the use of PVRTexToolCLI which will degrade throughput.
 #
-# -ImageRecolor and -Webm options depend on -Pvr2Png
+# -Jpg, -Webp, and -Png are mutually exclusive options.
 #
-# -Webm will leave both a PNG and WEBM output, however, the PNG will not be recolored.
+# Example, skips creation of albedo.png, normal.png, mipmap.png, and control.png files:
+#
+# scripts/unpack-gamefiles.ps1 -Png -ImageRecolor -Exclude "mipmap.png,normal.png,albedo.png,control.png"
+#
 ##
 param(
     [Parameter()]
     [switch]$Force,
     [Parameter()]
-    [switch]$Pvr2Png,
-    [Parameter()]
     [switch]$ImageRecolor,
     [Parameter()]
-    [switch]$Webm
+    [switch]$Png,
+    [Parameter()]
+    [switch]$Webp,
+    [Parameter()]
+    [switch]$Jpg,
+    [Parameter()]
+    [string]$Exclude
 )
 $ErrorActionPreference = "Stop"
 
@@ -38,14 +45,18 @@ function Recursive-Unpack($path, $out_path) {
             if ($VerbosePreference -ne "SilentlyContinue") {
                 $arg_list += @("--verbose")
             }
-            if ($Pvr2Png.IsPresent) {
-                $arg_list += @("--pvr2png")
-            }
+            if ($Jpg.IsPresent) {
+                $arg_list += @("--img-format jpg")
+            } elseif ($Webp.IsPresent) {
+                $arg_list += @("--img-format webp")
+            } elseif ($Png.IsPresent) {
+                $arg_list += @("--img-format png")
+            } 
             if ($ImageRecolor.IsPresent) {
                 $arg_list += @("--recolor")
             }
-            if ($Webm.IsPresent) {
-                $arg_list += @("--webm")
+            if ($Null -ne $Exclude) {
+                $arg_list += @("--exclude", $Exclude)
             }
             $arg_list += @(
                 "unpack",
