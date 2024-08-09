@@ -10,4 +10,5 @@ echo steam steam/question select "I AGREE" | debconf-set-selections
 echo steam steam/license note '' | debconf-set-selections
 apt-get -y install steamcmd
 ln -s /usr/games/steamcmd /usr/local/bin/steamcmd
-steamcmd +quit
+# TODO: commented out because of problem in applehv on M1 mac, will need to research problem further
+#steamcmd +quit
