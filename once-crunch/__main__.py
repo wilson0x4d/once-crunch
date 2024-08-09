@@ -14,9 +14,9 @@ def configure():
         description='A toolchain for data mining games.')
     parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument('-f', '--force', action='store_true')
-    parser.add_argument('--pvr2png', action='store_true', help='Convert PVR files to PNG files.')
+    parser.add_argument('--img-format', choices=['png','webp','jpg'], help='Convert supported images to specified file format.')
     parser.add_argument('--recolor', action='store_true', help='Recolor supported images.')
-    parser.add_argument('--webp', action='store_true', help='Convert supported images to webp format.')
+    parser.add_argument('--exclude', type=str, help='Specify exclusions as a CSV list.')
     # `commands` sub-parsers
     subparsers = parser.add_subparsers(title='commands',dest='command',required=True)
     commands_package = importlib.import_module('once-crunch.commands')

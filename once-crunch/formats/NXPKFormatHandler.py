@@ -15,6 +15,33 @@ from ..util.imgtools import pvr2png, magick
 
 _log = Logger(__name__)
 
+_args_exclude = []
+_image_file_types = [
+    '.pvr',
+    '.png',
+    '.jpg',
+    '.tga',
+    '.tif',
+    '.bmp',
+    '.tiff',
+    '.jpeg'
+]
+
+def _is_excluded(args: argparse.Namespace, target:str):
+    global _args_exclude
+    if (0 == len(_args_exclude) and None != args.exclude):
+        _args_exclude = args.exclude.split(',')
+    for exclusion in _args_exclude:
+        if 0 <= target.find(exclusion):
+            _log.debug(f'`{target}` is excluded by `{exclusion}`.')
+            return True
+    return False
+
+def _is_imagefile(path:str):
+    global _image_file_types
+    noext, ext = os.path.splitext(path)
+    return ext in _image_file_types
+
 class NXPKFormatHandler(FormatHandler):
     __format_id__ = 'nxpk'
     __format_desc__ = 'NeoX Package (.npk) Data Format'
@@ -26,6 +53,8 @@ class NXPKFormatHandler(FormatHandler):
         return buf.startswith(b'NXPK')
     
     def decode(self, args: argparse.Namespace):
+        if _is_excluded(args, args.SOURCE):
+            return
         source_filename = args.SOURCE.replace(f'{os.path.dirname(args.SOURCE)}{os.path.sep}', '')
         dest = args.DESTINATION
         self._header = self.extract_header()
@@ -59,13 +88,15 @@ class NXPKFormatHandler(FormatHandler):
                     source_filename, 
                     f'{i}')
             filepath = os.path.join(args.DESTINATION, filename)
+            if _is_excluded(args, filepath):
+                continue
             short_filename = filename.replace(f'{os.path.dirname(filename)}/', '')
             if not args.force and os.path.exists(filepath):
                 # if file exists (and not args.force) skip unpacking (would-be file will still be post-processed)
-                _log.progress(f'(unpack) {short_filename}', i+1, self._header["table_entry_count"])
+                _log.progress(f'(cached) {short_filename}', i+1, self._header["table_entry_count"])
                 pass
             else:
-                _log.progress(f'(extract) {short_filename}', i+1, self._header["table_entry_count"])
+                _log.progress(f'(extract) {short_filename}', i+1, self._header["table_entry_count"], False)
                 entry = entry_table[i]
                 self._file.seek(entry['data_offset'])
                 data = self._file.read(entry['data_size'])
@@ -86,22 +117,38 @@ class NXPKFormatHandler(FormatHandler):
                     case _:
                         raise NotImplementedError(f'nxpk compression type: {entry["compression_type"]}')
                 self.save_binary(data, filepath, args.force)
-            # convert pvr -> png
-            is_pvr = filepath.endswith('.pvr')
-            if is_pvr:
-                if args.pvr2png:
-                    _log.progress(f'(pvr2png) {short_filename}', i+1, self._header["table_entry_count"])
-                    filepath, existing_png = pvr2png(filepath, args.force)
-                if filepath.endswith('.png'):
-                    if args.recolor or args.webp:
-                        _log.progress(f'(recolor) {short_filename}', i+1, self._header["table_entry_count"])
-                        filepath = magick(filepath, {
-                            'force': args.force,
-                            'existing_png': existing_png,
-                            'recolor': args.recolor,
-                            'webp': args.webp
-                        })
-            # TODO pyc -> py
+            noext, ext = os.path.splitext(filepath)
+            # image post-processing
+            if _is_imagefile(filepath):
+                out_filepath = f'{noext}.{args.img_format}'
+                if _is_excluded(args, out_filepath):                    
+                    continue
+                existing_img = None != args.img_format and filepath.endswith(args.img_format) and os.path.isfile(out_filepath)
+                # skip existing unless `--force`, this also means recoloring without changing file format requires `--force`
+                if args.force or not existing_img:
+                    # convert pvr to png (sometimes only as intermediary format since imagemagick can't process PVR files.)
+                    pvr_file = '.pvr' == ext
+                    if pvr_file and None != args.img_format:
+                        _log.progress(f'(pvr2png) {short_filename}', i+1, self._header["table_entry_count"])
+                        filepath = pvr2png(filepath, args.force)
+                    # optionally process image files by recoloring, converting, or some custom operation
+                    if '.png' == ext or '.webp' == ext or '.jpg' == ext: # TODO: supported file extensions should be a list, not a hardcoded conditional expression
+                        magick_options = {
+                            'custom_args': [],
+                            'img_format': args.img_format,
+                            'force': True == args.force,
+                            'existing_img': True == existing_img,
+                            'recolor': True == args.recolor
+                        }
+                        _log.progress(f'(magick) {short_filename}', i+1, self._header["table_entry_count"])
+                        filepath = magick(filepath, magick_options)
+                    # if extract was a PVR file, and target format was not PNG, remove intermediary file to save on space
+                    if pvr_file and None != args.img_format and ext != f'.{args.img_format}':
+                        # only remove if the target image format was created
+                        if os.path.isfile(f'{noext}.{args.img_format}') and os.path.isfile(f'{noext}.png'):
+                            # removing intermediary 'png' file
+                            os.remove(f'{noext}.png')
+            # TODO: pyc -> py
 
     def decode_nxfn(self, offset:int, args: argparse.Namespace):
         nfxn_formatter = NXFNFormatHandler(self._file, offset)
