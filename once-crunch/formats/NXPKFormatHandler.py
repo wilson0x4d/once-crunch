@@ -1,11 +1,11 @@
 # SPDX-FileCopyrightText: © 2024 Shaun Wilson
 # SPDX-License-Identifier: MIT
 import argparse
-from dataclasses import dataclass
 import io
 import lz4.block
 import os
 import struct
+import time
 import zlib
 import zstd
 from .FormatHandler import FormatHandler
@@ -53,6 +53,7 @@ class NXPKFormatHandler(FormatHandler):
         return buf.startswith(b'NXPK')
     
     def decode(self, args: argparse.Namespace):
+        start_time = time.time()
         if _is_excluded(args, args.SOURCE):
             return
         source_filename = args.SOURCE.replace(f'{os.path.dirname(args.SOURCE)}{os.path.sep}', '')
@@ -120,10 +121,11 @@ class NXPKFormatHandler(FormatHandler):
             noext, ext = os.path.splitext(filepath)
             # image post-processing
             if _is_imagefile(filepath):
-                out_filepath = f'{noext}.{args.img_format}'
-                if _is_excluded(args, out_filepath):                    
+                out_ext = ext if None == args.img_format else f'.{args.img_format}'
+                out_filepath = f'{noext}{out_ext}'
+                if _is_excluded(args, out_filepath):
                     continue
-                existing_img = None != args.img_format and filepath.endswith(args.img_format) and os.path.isfile(out_filepath)
+                existing_img = None != args.img_format and os.path.isfile(out_filepath)
                 # skip existing unless `--force`, this also means recoloring without changing file format requires `--force`
                 if args.force or not existing_img:
                     # convert pvr to png (sometimes only as intermediary format since imagemagick can't process PVR files.)
@@ -131,6 +133,7 @@ class NXPKFormatHandler(FormatHandler):
                     if pvr_file and None != args.img_format:
                         _log.progress(f'(pvr2png) {short_filename}', i+1, self._header["table_entry_count"])
                         filepath = pvr2png(filepath, args.force)
+                        noext, ext = os.path.splitext(filepath)
                     # optionally process image files by recoloring, converting, or some custom operation
                     if '.png' == ext or '.webp' == ext or '.jpg' == ext: # TODO: supported file extensions should be a list, not a hardcoded conditional expression
                         magick_options = {
@@ -142,13 +145,16 @@ class NXPKFormatHandler(FormatHandler):
                         }
                         _log.progress(f'(magick) {short_filename}', i+1, self._header["table_entry_count"])
                         filepath = magick(filepath, magick_options)
-                    # if extract was a PVR file, and target format was not PNG, remove intermediary file to save on space
-                    if pvr_file and None != args.img_format and ext != f'.{args.img_format}':
+                        noext, ext = os.path.splitext(filepath)
+                    # if extract was a PVR file, and target format is not PNG, remove intermediary PNG file to save on space
+                    if pvr_file and None != args.img_format and 'png' != args.img_format:
                         # only remove if the target image format was created
-                        if os.path.isfile(f'{noext}.{args.img_format}') and os.path.isfile(f'{noext}.png'):
+                        if os.path.isfile(out_filepath) and os.path.isfile(f'{noext}.png'):
                             # removing intermediary 'png' file
                             os.remove(f'{noext}.png')
             # TODO: pyc -> py
+        elapsed_time = time.time() - start_time
+        _log.activity(f'Done. `{len(entry_table)}` entries took `{elapsed_time}` seconds.')
 
     def decode_nxfn(self, offset:int, args: argparse.Namespace):
         nfxn_formatter = NXFNFormatHandler(self._file, offset)
