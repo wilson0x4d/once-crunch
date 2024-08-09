@@ -14,13 +14,17 @@ A containerized toolchain for data mining the game "Once Human."
 
 ### Prerequisites
 
+You should be able to use Windows, Linux, or macOS as a "Host environment". The Host environment requires the following:
+
 - [Podman](https://podman.io/); a cross-platform tool that manages containers, pods, and images.
 - [PowerShell](https://github.com/PowerShell/PowerShell); a cross-platform automation and configuration tool/framework.
 - [Git](https://git-scm.com/); a free and open source distributed version control system.
 
+You could forego these pre-reqs, you will however need to perform dependent tasks manually through alternative means.
+
 ### Storage
 
-At the time of this writing, the game requires approximately 50GiB of storage. Once Crunch will consume an additional 150-450GiB of storage depending on how you use it.
+At the time of this writing, the game requires approximately 50GiB of storage. Once Crunch will consume an additional 100-200GiB of storage depending on how you use it.
 
 ### Containers
 
@@ -30,7 +34,7 @@ We do not publish a container image, you create an image yourself. You should no
 
 ### Installation
 
-At this point you should have installed and configured prerequisites, confirming they work correctly, and you should have verified there is sufficient storage available to download a copy of the game.
+At this point you should have installed and configured prerequisites, confirming they work correctly, and you should have verified there is sufficient storage available to download a copy of the game. We will assume you have not cloned the once-crunch repo yet:
 
 ```sh
 #
@@ -76,15 +80,15 @@ scripts/run-container.ps1
 
 ### Game Files
 
-Once Crunch does not contain a copy of the game. You will need to acquire the game through regular means. The container includes an installation of `steamcmd` which you could use, or, you could manually download and install the game.
+Once Crunch does not contain a copy of any game files. You will need to acquire game files through regular means. The container includes an installation of `steamcmd` which you could use, or, you could manually download and copy the game files to the data directory.
 
 #### Manual Installation/Copying
 
-If you manually install/copy the game files you should know that Once Crunch expected the root of the game to be the directory `/data/once-human` inside of the container. Where this maps to outside of the container is something only you will know. If you followed the instructions above the "once-human" directory should exist side-by-side with the "once-crunch" directeory created by `git clone`.
+If you manually install/copy the game files you should know that Once Crunch expected the root of the game to be the directory `/data/once-human` inside of the container, and, the `-DataDir` parameter you pass to `run-container.ps1` gets mapped to `/data/` (too obvious?) If you followed the instructions above the "once-human" directory should exist side-by-side with the "once-crunch" directory created by `git clone`.
 
 #### Using `steamcmd`
 
-To install using `steamcmd` there are two scripts you can use from inside the container. The first will auth you to Steam servers. The second will allow you to download the game from Steam servers after you have auth'd. 
+To install using `steamcmd` there are two scripts you can use from inside the container, or you can leverage steamcmd manually. The first script will auth you to Steam servers. The second will allow you to download the game from Steam servers after you have auth'd. 
 
 Unfortunately, downloading the game via `steamcmd` requires a login, but, the game is free and you can create an account just for downloading if you prefer (a best practice, actually.)
 
@@ -108,7 +112,7 @@ After successful login you will not need to enter credentials again unless you r
 #
 # from inside the container:
 #
-cd /root/code/once-crunch 
+cd /root/code/once-crunch
 scripts/download-game.sh youraccount@email.com
 #
 # ... wait ...
@@ -123,19 +127,20 @@ At this point you now how Once Crunch installed and the game files downloaded.
 
 ## Usage
 
-Once Crunch provides scripts for:
+Once Crunch is designed to be functionally expanded over time. In its current state it is capable of:
 
-- Processing game files, extracting game data (unpack-game)
-- Constructing a hierarchical copy of the game data.
-- Converting all textures into PNGs for further image processing.
-- Stitching well-known files such as map tiles.
-- ... and more.
+- Processing game files and extracting all assets.
+- Constructing a hierarchical copy of assets.
+- Converting all textures into PNG, WEBP, or JPG.
+- Post-processing converted textures.
 
 Making use of Once Crunch is a matter of running one or more scripts and inspecting the results.
 
+At its core Once Crunch is a series of python modules and it can be easily modified to operate on data from any game.
+
 ## Next Steps
 
-You are encouraged to peruse the `scripts/` folder and read the header of each script. Every script is self-documenting, and if there are dependencies between scripts they will be clearly noted. To get started, have a look at `unpack-nxpk.ps1` and `apply-nxfn.ps1` scripts, they will get you started.
+You are encouraged to peruse the `scripts/` and `once-crunch/` directories. Scripts and code should be self-documenting. To get started, have a look at the `unpack-gamefiles.ps1` script.
 
 ## Why?
 
