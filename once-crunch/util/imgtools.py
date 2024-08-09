@@ -55,7 +55,7 @@ def magick(filepath:str, options:dict):
     noext, ext = os.path.splitext(filepath)
     if options['img_format']:
         ext = f'.{options["img_format"]}'
-    out_filepath = f'{noext}.{ext}'
+    out_filepath = f'{noext}{ext}'
     if filepath != out_filepath and os.path.isfile(out_filepath):
         if options['force']:
             os.remove(out_filepath)
