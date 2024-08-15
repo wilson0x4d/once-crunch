@@ -1,6 +1,6 @@
-.venv/
-ssh/
-deps/
-*.gpg
-gitconfig
 __pycache__
+.devcontainer/
+.github/
+.vscode/
+.venv/
+deps/
