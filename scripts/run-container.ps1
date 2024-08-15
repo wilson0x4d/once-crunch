@@ -24,9 +24,6 @@ if ([String]::IsNullOrWhiteSpace($DataDir)) {
     Start-Sleep -Seconds 3
 }
 
-# powershell try set window caption
-$Host.UI.RawUI.WindowTitle = "once-crunch"
-
 if ($NonInteractive.IsPresent) {
     # start the container in 'background mode'
     $ArgList = @(

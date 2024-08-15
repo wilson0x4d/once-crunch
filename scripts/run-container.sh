@@ -32,9 +32,6 @@ if [[ "" == "$DATA_DIR" ]]; then
     echo "You did not provide a data directory argument.\nThe data directory is defaulted to: \n$DATA_DIR"
 fi
 
-# try set window title
-echo -n -e "\033]0;once-crunch\007"
-
 # run container
 if [ 1 -eq $NON_INTERACTIVE_MODE ]; then
     podman run --rm -d -v "$DATA_DIR:/data" --name "ci-once-crunch" --platform "linux/amd64" localhost/once-crunch:latest /bin/bash -c 'while true; do sleep 30; done'
