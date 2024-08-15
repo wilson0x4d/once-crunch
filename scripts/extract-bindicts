@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+# SPDX-FileCopyrightText: © 2024 Shaun Wilson
+# SPDX-License-Identifier: MIT
+#
+# A python script for extracting 'bindict' blobs from python files.
+##
+
+import os
+import re
+import sys
+
+if len(sys.argv) < 2:
+    print('required path argument not provided, aborting.')
+    exit(3)
+
+__path:str = None
+__force:bool = False
+
+for arg in sys.argv[1:]:
+    match arg:
+        case '--force' | '-f':
+            __force = True
+        case _:
+            if arg.startswith('-'):
+                print('unrecognized command-line option `{arg}`, aborting.')
+                exit(4)
+            elif None != __path:
+                print('unexpected positional argument `{arg}`, aborting.')
+                exit(5)
+            else:
+                __path = arg
+
+if not os.path.isdir(__path):
+    print(f'Provided path is invalid: {__path}')
+    exit(1)
+
+__re_bindict = re.compile(r"bindict\(b'(.*)'\)\n", re.MULTILINE)
+
+__decdict = {
+    '\\\\': ord('\\'),
+    "\\'": ord("\'"),
+    '\\"': ord('\"'),
+    '\\a': ord('\a'),
+    '\\b': ord('\b'),
+    '\\n': ord('\n'),
+    '\\r': ord('\r'),
+    '\\t': ord('\t')
+}
+
+def decoder(b:str):
+    global __decdict
+    arr:bytearray = bytearray()
+    i = 0
+    while True:
+        if i >= len(b):
+            break
+        if b[i] == '\\':
+            prekey = b[i:i+2]
+            if prekey in __decdict:
+                v = __decdict[prekey]
+                # print(f'!{prekey}={v}', end=" ")
+                arr.append(v)
+                i += 2
+            elif b[i+1] == 'x':
+                s = b[i+2:i+4]
+                v = int(s, base=16)
+                # print(f'@{s}={v}', end=" ")
+                arr.append(v)
+                i += 4
+            else:
+                print(f'unsupported encode at position {i} ({b[i:i+10]})')
+                exit(2)
+        else:
+            s = b[i]
+            v = ord(s)
+            # print(f'#{s}={v}', end=" ")
+            arr.append(v)
+            i += 1
+    return arr
+
+for item in os.walk(__path):
+    dirname = item[0]
+    print(f'{dirname}\x1b[0J')
+    filenames = item[2]
+    i = 0
+    for filename in filenames:
+        i += 1
+        filepath = os.path.join(dirname, filename)
+        if filepath.endswith('.py'):
+            print(f'[{i}/{len(filenames)}] {filename}\x1b[0J', end='\r')
+            out_filepath = f'{filepath}.bindict'
+            if not __force and os.path.isfile(out_filepath):
+                continue
+            file_content:str
+            with open(filepath, 'rt') as in_file:
+                file_content = in_file.read()
+            match = __re_bindict.search(file_content)
+            if None != match:
+                result = decoder(match.group(1))
+                with open(out_filepath, 'wb') as out_file:
+                    out_file.write(result)
