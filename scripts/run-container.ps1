@@ -5,49 +5,62 @@ param(
     [parameter()]
     [switch]$NonInteractive,
     [parameter()]
-    [string]$DataDir,
+    [switch]$Attach,
     [parameter()]
-    [string]$LaunchTarget,
+    [string]$DataDir,
     [parameter()]
     [string]$ContainerName = "ci-once-crunch"
 )
 if ([String]::IsNullOrWhiteSpace($DataDir)) {
     # when not specified the datadir defaults to the
     # directory just above the git repo. this is a
-    # personal convenie nce so i can access the 
+    # personal convenience so i can access the 
     # repo from within the container (rather than)
     # the ephemeral snapshot pulled during container
     # creation.
     $context = $pwd.Path
     $DataDir = [IO.Path]::GetFullPath("$context/..")
-    Write-Warning "You did not provide a -DataDir argument.`nThe data directory is defaulted to: `n$DataDir"
+    Write-Warning "You did not provide a -DataDir argument.`nThe data directory is defaulted to: `n`n`t$DataDir`n"
     Start-Sleep -Seconds 3
 }
-$ArgList = @(
-    "run", 
-    "--rm", 
-    "-v", "$DataDir`:/data", 
-    "-e", "DISPLAY=$(@([Net.DNS]::GetHostAddresses([Environment]::MachineName) | Where-Object { $_.AddressFamily -eq "InterNetwork" })[0].ToString()):0",
-    "--platform", "linux/amd64",
-    "--name", "$ContainerName"
-)
+
+# powershell try set window caption
+$Host.UI.RawUI.WindowTitle = "once-crunch"
 
 if ($NonInteractive.IsPresent) {
-    $ArgList += "localhost/once-crunch:latest"
-    $ArgList += "/bin/bash"
-    $ArgList += "-c"
-    $ArgList += "sys/activate-daemon.sh"
+    # start the container in 'background mode'
+    $ArgList = @(
+        "run", 
+        "--rm",
+        "-d",
+        "-v", "$DataDir`:/data", 
+        "-e", "DISPLAY=$(@([Net.DNS]::GetHostAddresses([Environment]::MachineName) | Where-Object { $_.AddressFamily -eq "InterNetwork" })[0].ToString()):0",
+        "--platform", "linux/amd64",
+        "--name", "$ContainerName",
+        "localhost/once-crunch:latest",
+        "/bin/bash", "-c", "while true; do sleep 30; done"
+    )
     Start-Process "podman" -ArgumentList $ArgList -NoNewWindow
-} elseif ([string]::IsNullOrWhiteSpace($LaunchTarget)) {
-    $ArgList += "-it"
-    $ArgList += "localhost/once-crunch:latest"
-    $ArgList += "/bin/bash"
-    $ArgList += "--rcfile"
-    $ArgList += "sys/with-venv.sh"
+} elseif ($Attach.IsPresent) {
+    # attach to a 'background mode' container
+    $ArgList = @(
+        "exec", 
+        "-it",
+        "$ContainerName",
+        "/bin/bash", "--rcfile", "sys/with-venv.sh"
+    )
     Start-Process "podman" -ArgumentList $ArgList -NoNewWindow -Wait
 } else {
-    $ArgList += "-it"
-    $ArgList += "localhost/once-crunch:latest"
-    $ArgList += $LaunchTarget
+    # run the container interactively
+    $ArgList = @(
+        "run",
+        "-it",
+        "--rm", 
+        "-v", "$DataDir`:/data", 
+        "-e", "DISPLAY=$(@([Net.DNS]::GetHostAddresses([Environment]::MachineName) | Where-Object { $_.AddressFamily -eq "InterNetwork" })[0].ToString()):0",
+        "--platform", "linux/amd64",
+        "--name", "$ContainerName",
+        "localhost/once-crunch:latest"
+    )
     Start-Process "podman" -ArgumentList $ArgList -NoNewWindow -Wait
 }
