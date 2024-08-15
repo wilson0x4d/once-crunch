@@ -50,7 +50,7 @@ class NXFNFormatHandler(FormatHandler):
         header_size = 16
         self._file.seek(self._offset)
         buf = self._file.read(header_size)
-        if (len(buf) < header_size):
+        if len(buf) < header_size:
             raise ValueError(f'Insuffucient header data, expected `{header_size}`, found `{len(buf)}`, aborting.')
         magic_number, r0, data_size, decompressed_data_size = struct.unpack('<IIII', buf)
         return {

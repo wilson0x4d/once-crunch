@@ -22,9 +22,9 @@ def configure():
     commands_package = importlib.import_module('once-crunch.commands')
     command_names = dir(commands_package)
     for command_name in command_names:
-        if (not command_name.startswith('__')):
+        if not command_name.startswith('__'):
             command_module = importlib.import_module(f'once-crunch.commands.{command_name}')
-            if (None != command_module.configure_help and None != command_module.execute):
+            if None != command_module.configure_help and None != command_module.execute:
                 command_module.configure_help(subparsers)
                 _commands[command_name] = command_module.execute
     return parser.parse_args()
@@ -35,15 +35,15 @@ def try_execute_command(args):
             fn = _commands[args.command]
             fn(args)
 
-if ("__main__" == __name__):
+if '__main__' == __name__:
     try:
         args = configure()
-        if (args.verbose):
+        if args.verbose:
             _log.set_loglevel(LogLevel.TRACE)
             _log.debug(args)
         try_execute_command(args)
     except KeyboardInterrupt:
-        _log.info("^C\x1b[0J\r\n\n\a")
+        _log.info('^C\x1b[0J\r\n\n\a')
         exit(0x4d)
     finally:
-        _log.activity("\r\n")
+        _log.activity('\r\n')

@@ -21,14 +21,14 @@ def configure_help(subparsers: argparse._SubParsersAction):
     formats_package = importlib.import_module('..formats', 'once-crunch.commands')
     module_names = dir(formats_package)
     for module_name in module_names:
-        if (module_name.startswith('__') or module_name == 'FormatHandler'):
+        if module_name.startswith('__') or module_name == 'FormatHandler':
             continue
         module = importlib.import_module(f'once-crunch.formats.{module_name}')
         member_names = dir(module)
         for member_name in member_names:
-            if (module_name == 'FormatHandler'):
+            if module_name == 'FormatHandler':
                 continue
-            if (member_name.startswith('__') or member_name == 'FormatHandler'):
+            if member_name.startswith('__') or member_name == 'FormatHandler':
                 continue
             formatter_class = getattr(module, member_name)
             if not '__format_id__' in dir(formatter_class):

@@ -29,7 +29,7 @@ _image_file_types = [
 
 def _is_excluded(args: argparse.Namespace, target:str):
     global _args_exclude
-    if (0 == len(_args_exclude) and None != args.exclude):
+    if 0 == len(_args_exclude) and None != args.exclude:
         _args_exclude = args.exclude.split(',')
     for exclusion in _args_exclude:
         if 0 <= target.find(exclusion):
@@ -78,7 +78,7 @@ class NXPKFormatHandler(FormatHandler):
         # TODO: add support for "map" files
         for i in range(len(entry_table)):
             filename = None
-            if (nxfn != None):
+            if nxfn != None:
                 # use NXFN data to name files
                 filename = nxfn[i].replace(b'\\', b'/').decode('utf-8')
             else:
@@ -94,10 +94,10 @@ class NXPKFormatHandler(FormatHandler):
             short_filename = filename.replace(f'{os.path.dirname(filename)}/', '')
             if not args.force and os.path.exists(filepath):
                 # if file exists (and not args.force) skip unpacking (would-be file will still be post-processed)
-                _log.progress(f'(cached) {short_filename}', i+1, self._header["table_entry_count"])
+                _log.progress(f'(cached) {short_filename}', i+1, self._header["table_entry_count"], False)
                 pass
             else:
-                _log.progress(f'(extract) {short_filename}', i+1, self._header["table_entry_count"], False)
+                _log.progress(f'(extract) {short_filename}', i+1, self._header["table_entry_count"])
                 entry = entry_table[i]
                 self._file.seek(entry['data_offset'])
                 data = self._file.read(entry['data_size'])
@@ -164,7 +164,7 @@ class NXPKFormatHandler(FormatHandler):
         header_size = 24
         self._file.seek(self._offset)
         buf = self._file.read(header_size)
-        if (len(buf) < header_size):
+        if len(buf) < header_size:
             raise ValueError(f'Insuffucient header data, expected `{header_size}`, found `{len(buf)}`, aborting.')
         magic_number, table_entry_count, r0, r1, r2, r3, r4, r5, table_offset = struct.unpack('<IIHHBBHII', buf)
         return {

@@ -4,7 +4,7 @@
 #
 # unpack-gamefiles.ps1
 #
-# Recusrively processes all npk files in the specified directory.
+# Recursively processes all npk files in the specified directory.
 #
 # For the fastest export run with no options.
 # 
@@ -72,7 +72,7 @@ function Recursive-Unpack($path, $out_path) {
             $attr = [IO.File]::GetAttributes($child.FullName)
             if (([System.IO.FileAttributes]::Directory -eq ($attr -bAnd [System.IO.FileAttributes]::Directory))) {
                 $sub_outpath = $child.FullName.Replace($path, $out_path)
-                Recursive-Unpack $child.FullName $root $sub_outpath
+                Recursive-Unpack $child.FullName $sub_outpath
             }
         }
     }

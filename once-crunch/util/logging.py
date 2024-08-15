@@ -19,8 +19,8 @@ class Logger:
     def set_loglevel(self, level: LogLevel):
         Logger._logLevel = level
     def write(self, level: LogLevel, message: str):
-        if (level >= Logger._logLevel):
-            if (len(self._context) > 0):
+        if level >= Logger._logLevel:
+            if len(self._context) > 0:
                 print(f'\x1b[0m[{self._context}] {message}')
             else:
                 print(message)
