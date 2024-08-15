@@ -23,9 +23,20 @@ else
         echo "Setup file for PVRTexTool not found."
         echo "Download from: https://developer.imaginationtech.com/downloads/"
         echo "Copy into $HOME/Downloads with name: PVRTexToolSetup-2024_R1.run-x64"
-        exit 1
     fi
 fi
 
+case "$(uname -m)" in
+    "x86_64" | "amd64" | "x64")
+        arch="amd64"
+        ;;
+    "aarch64" | "arm64")
+        arch="arm64"
+        ;;
+    *)
+        exit 119
+        ;; 
+esac
+
 # build the container
-podman build --arch "amd64" --os "linux" -t "localhost/once-crunch:latest" --squash-all "$context"
+podman build --arch "$arch" --os "linux" -t "localhost/once-crunch:latest" --squash-all "$context"
