@@ -6,14 +6,14 @@
 # image processing tools
 ##
 
-from genericpath import isfile
 import os
 import shutil
 import subprocess
 from ..util.logging import Logger
 
 _path_PVRTexToolCLI = shutil.which('PVRTexToolCLI')
-_path_magick = shutil.which('convert')
+_path_im_convert = shutil.which('convert')
+_path_im_montage = shutil.which('montage')
 
 _log = Logger(__name__)
 
@@ -40,12 +40,13 @@ def pvr2png(filepath:str, force:bool):
     proc.wait()
     if not os.path.isfile(png_filepath):
         _log.warn(f'pvr2png() did not produce any output for: {filepath}')
+        # TODO: sometimes when this happens it's because the file is a PNG file (possibly others) with an incorrect 'pvr' file extension
         return filepath
     return png_filepath
 
 def magick(filepath:str, options:dict):
-    global _path_magick
-    tool_path = _path_magick
+    global _path_im_convert
+    tool_path = _path_im_convert
     if None == tool_path or 0 >= len(tool_path):
         _log.debug(f'magick[1]: {filepath}, {options}')
         return filepath
@@ -88,7 +89,7 @@ def magick(filepath:str, options:dict):
                 '-colorspace', 'RGB',
             ]
         magick_args += [
-            '-define', 'png:lossless=true'
+            '-define', 'png:compression-level=9',
         ]
     # removed, we still perform `-strip` in this case
     # elif filepath == out_filepath and (0 == len(options['custom_args']) or not options['recolor']):
@@ -106,3 +107,27 @@ def magick(filepath:str, options:dict):
         return filepath
     _log.debug(f'magick[6]: {filepath}, {options}')
     return out_filepath
+
+def stitch(ordered_images:list, scan_width:int, output_filepath:str, force:bool):
+    if os.path.isfile(output_filepath):
+        if not force:
+            return
+        else:
+            os.remove(output_filepath)
+    global _path_im_montage
+    tool_path = _path_im_montage
+    magick_args = [ tool_path ]
+    magick_args += ordered_images
+    magick_args += [
+        '-tile', f'{scan_width}x',
+        '-geometry', '+0+0',
+        '-quality', '74'
+    ]
+    noext, ext = os.path.splitext(output_filepath)
+    if ext == '.png':
+        magick_args += [ '-define', 'png:compression-level=9' ]
+    elif ext == '.webp':
+        magick_args += [ '-define', 'webp:lossless=true' ]
+    magick_args += [ output_filepath ]
+    proc = subprocess.Popen(magick_args)
+    proc.wait()
