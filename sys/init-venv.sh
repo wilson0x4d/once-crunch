@@ -5,5 +5,7 @@
 set -eo pipefail
 python3 -m venv --prompt "once-crunch" .venv
 source .venv/bin/activate
-poetry install --no-root
+if [ -e pyproject.toml ]; then
+    poetry install --no-root
+fi
 deactivate
