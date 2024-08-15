@@ -14,17 +14,17 @@ A containerized toolchain for data mining the game "Once Human."
 
 ### Prerequisites
 
-You should be able to use Windows, Linux, or macOS as a "Host environment". The Host environment requires the following:
+You should be able to use Windows, Linux, or macOS as a "Host environment". The scripts provided expect the environment has the following:
 
 - [Podman](https://podman.io/); a cross-platform tool that manages containers, pods, and images.
-- [PowerShell](https://github.com/PowerShell/PowerShell); a cross-platform automation and configuration tool/framework.
 - [Git](https://git-scm.com/); a free and open source distributed version control system.
+- [PowerShell](https://github.com/PowerShell/PowerShell) or `bash`, the PowerShell scripts will run on Windows, Linux, and macOS. For bootstrapping/installation steps both `pwsh` and `bash` scripts are provided. Internal to the container sometimes only one or the other exists for a particular purpose.
 
 You could forego these pre-reqs, you will however need to perform dependent tasks manually through alternative means.
 
 ### Storage
 
-At the time of this writing, the game requires approximately 50GiB of storage. Once Crunch will consume an additional 100-200GiB of storage depending on how you use it.
+At the time of this writing, the game requires approximately 50GiB of storage. Once Crunch will consume an additional 100-200GiB of storage depending on how you use it. When running the container you should specify a "data directory" parameter to a directory on a storage volume which has sufficient space.
 
 ### Containers
 
@@ -34,7 +34,7 @@ We do not publish a container image, you create an image yourself. You should no
 
 ### Installation
 
-At this point you should have installed and configured prerequisites, confirming they work correctly, and you should have verified there is sufficient storage available to download a copy of the game. We will assume you have not cloned the once-crunch repo yet:
+At this point you should have installed and configured prerequisites, confirming they work correctly, and you should have verified there is sufficient storage available to download a copy of the game. We will assume you have not cloned the repo yet:
 
 ```sh
 #
