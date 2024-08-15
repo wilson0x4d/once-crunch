@@ -1,0 +1,319 @@
+#!/usr/bin/env python3
+# SPDX-FileCopyrightText: © 2024 Shaun Wilson
+# SPDX-License-Identifier: MIT
+#
+# once-human.pycrules
+#
+# A `pycrules` file for `pycdo` tool, available at:
+# https://github.com/wilson0x4d/pycdo
+##
+
+def is_compatible(input:bytearray) -> bool:
+    if input.startswith(b'\xA8\x0D\x0D\x0A'):
+        return True
+    else:
+        return False
+
+def get_opcode_size() -> int:
+    return 1
+
+def inprocess(input: bytearray, output: bytearray) -> dict:
+    output[0] = 0xCB
+    result = {}
+    rdi = 0
+    result['magic'] = input[rdi:rdi+4]
+    rdi = 4
+    # python >3.7
+    result['flags'] = int.from_bytes(input[rdi:rdi+4], 'little')
+    rdi += 4
+    if result['flags'] & 1:
+        result['sip_hash'] = input[rdi:rdi+8]
+        rdi += 8
+    else: # or if python <3.7
+        result['timestamp'] = int.from_bytes(input[rdi:rdi+4], 'little')
+        rdi += 4
+        # python >3.3
+        result['marsh_size'] = int.from_bytes(input[rdi:rdi+4], 'little')
+        rdi += 4
+    # emit required values
+    ver_major = 3
+    ver_minor = 11
+    result['header_size'] = rdi
+    result['version'] = (ver_major * 100) + ver_minor
+    return result
+
+def outprocess(input: bytearray, output: bytearray) -> int:
+    return len(output)
+
+def preprocess(input: bytearray, output: bytearray, index:int) -> int | None:
+    pass
+
+def postprocess(input: bytearray, output: bytearray, index:int) -> int | None:
+    pass
+
+def get_subst_mapper(typecode, mod, offset):
+    pass
+
+def get_opcode_map() -> dict:
+    return {
+        'CACHE': 0, # b'\x00'
+        'POP_TOP': 1, # b'\x01'
+        'PUSH_NULL': 2, # b'\x02'
+        'NOP': 9, # b'\x09'
+        'UNARY_POSITIVE': 10, # b'\x0a'
+        'UNARY_NEGATIVE': 11, # b'\x0b'
+        'UNARY_NOT': 12, # b'\x0c'
+        'UNARY_INVERT': 15, # b'\x0f'
+        'BINARY_SUBSCR': 25, # b'\x19'
+        'GET_LEN': 30, # b'\x1e'
+        'MATCH_MAPPING': 31, # b'\x1f'
+        'MATCH_SEQUENCE': 32, # b'\x20'
+        'MATCH_KEYS': 33, # b'\x21'
+        'PUSH_EXC_INFO': 35, # b'\x23'
+        'CHECK_EXC_MATCH': 36, # b'\x24'
+        'CHECK_EG_MATCH': 37, # b'\x25'
+        'WITH_EXCEPT_START': 49, # b'\x31'
+        'GET_AITER': 50, # b'\x32'
+        'GET_ANEXT': 51, # b'\x33'
+        'BEFORE_ASYNC_WITH': 52, # b'\x34'
+        'BEFORE_WITH': 53, # b'\x35'
+        'END_ASYNC_FOR': 54, # b'\x36'
+        'STORE_SUBSCR': 60, # b'\x3c'
+        'DELETE_SUBSCR': 61, # b'\x3d'
+        'GET_ITER': 68, # b'\x44'
+        'GET_YIELD_FROM_ITER': 69, # b'\x45'
+        'PRINT_EXPR': 70, # b'\x46'
+        'LOAD_BUILD_CLASS': 71, # b'\x47'
+        'LOAD_ASSERTION_ERROR': 74, # b'\x4a'
+        'RETURN_GENERATOR': 75, # b'\x4b'
+        'LIST_TO_TUPLE': 82, # b'\x52'
+        'RETURN_VALUE': 83, # b'\x53'
+        'IMPORT_STAR': 84, # b'\x54'
+        'SETUP_ANNOTATIONS': 85, # b'\x55'
+        'YIELD_VALUE': 86, # b'\x56'
+        'ASYNC_GEN_WRAP': 87, # b'\x57'
+        'PREP_RERAISE_STAR': 88, # b'\x58'
+        'POP_EXCEPT': 89, # b'\x59'
+        'STORE_NAME': 90, # b'\x5a'
+        'DELETE_NAME': 91, # b'\x5b'
+        'UNPACK_SEQUENCE': 92, # b'\x5c'
+        'FOR_ITER': 93, # b'\x5d'
+        'UNPACK_EX': 94, # b'\x5e'
+        'STORE_ATTR': 95, # b'\x5f'
+        'DELETE_ATTR': 96, # b'\x60' 
+        'STORE_GLOBAL': 97, # b'\x61'
+        'DELETE_GLOBAL': 98, # b'\x62'
+        'SWAP': 99, # b'\x63'
+        'LOAD_CONST': 100, # b'\x64'
+        'LOAD_NAME': 101, # b'\x65'
+        'BUILD_TUPLE': 102, # b'\x66'
+        'BUILD_LIST': 103, # b'\x67'
+        'BUILD_SET': 104, # b'\x68'
+        'BUILD_MAP': 105, # b'\x69'
+        'LOAD_ATTR': 106, # b'\x6a'
+        'COMPARE_OP': 107, # b'\x6b'
+        'IMPORT_NAME': 108, # b'\x6c'
+        'IMPORT_FROM': 109, # b'\x6d'
+        'JUMP_FORWARD': 110, # b'\x6e'
+        'JUMP_IF_FALSE_OR_POP': 111, # b'\x6f'
+        'JUMP_IF_TRUE_OR_POP': 112, # b'\x70'
+        'POP_JUMP_FORWARD_IF_FALSE': 114, # b'\x72'
+        'POP_JUMP_FORWARD_IF_TRUE': 115, # b'\x73'
+        'LOAD_GLOBAL': 116, # b'\x74'
+        'IS_OP': 117, # b'\x75'
+        'CONTAINS_OP': 118, # b'\x76'
+        'RERAISE': 119, # b'\x77'
+        'COPY': 120, # b'\x78'
+        'BINARY_OP': 122, # b'\x7a'
+        'SEND': 123, # b'\x7b'
+        'LOAD_FAST': 124, # b'\x7c'
+        'STORE_FAST': 125, # b'\x7d'
+        'DELETE_FAST': 126, # b'\x7e'
+        'POP_JUMP_FORWARD_IF_NOT_NONE': 128, # b'\x80'
+        'POP_JUMP_FORWARD_IF_NONE': 129, # b'\x81'
+        'RAISE_VARARGS': 130, # b'\x82'
+        'GET_AWAITABLE': 131, # b'\x83'
+        'MAKE_FUNCTION': 132, # b'\x84'
+        'BUILD_SLICE': 133, # b'\x85'
+        'JUMP_BACKWARD_NO_INTERRUPT': 134, # b'\x86'
+        'MAKE_CELL': 135, # b'\x87'
+        'LOAD_CLOSURE': 136, # b'\x88'
+        'LOAD_DEREF': 137, # b'\x89'
+        'STORE_DEREF': 138, # b'\x8a'
+        'DELETE_DEREF': 139, # b'\x8b'
+        'JUMP_BACKWARD': 140, # b'\x8c'
+        'CALL_FUNCTION_EX': 142, # b'\x8e'
+        'EXTENDED_ARG': 144, # b'\x90'
+        'LIST_APPEND': 145, # b'\x91'
+        'SET_ADD': 146, # b'\x92'
+        'MAP_ADD': 147, # b'\x93'
+        'LOAD_CLASSDEREF': 148, # b'\x94'
+        'COPY_FREE_VARS': 149, # b'\x95'
+        'RESUME': 151, # b'\x97'
+        'MATCH_CLASS': 152, # b'\x98'
+        'FORMAT_VALUE': 155, # b'\x9b'
+        'BUILD_CONST_KEY_MAP': 156, # b'\x9c'
+        'BUILD_STRING': 157, # b'\x9d'
+        'LOAD_METHOD': 160, # b'\xa0'
+        'LIST_EXTEND': 162, # b'\xa2'
+        'SET_UPDATE': 163, # b'\xa3'
+        'DICT_MERGE': 164, # b'\xa4'
+        'DICT_UPDATE': 165, # b'\xa5'
+        'PRECALL': 166, # b'\xa6'
+        'CALL': 171, # b'\xab'
+        'KW_NAMES': 172, # b'\xac'
+        'POP_JUMP_BACKWARD_IF_NOT_NONE': 173, # b'\xad'
+        'POP_JUMP_BACKWARD_IF_NONE': 174, # b'\xae'
+        'POP_JUMP_BACKWARD_IF_FALSE': 175, # b'\xaf'
+        'POP_JUMP_BACKWARD_IF_TRUE': 176, # b'\xb0'
+    }
+
+def get_opcode_remap() -> dict:
+    return {
+        b'\x00': b'\x00', # CACHE
+        b'\x4E': b'\x01', # POP_TOP
+        b'\x49': b'\x02', # PUSH_NULL
+        b'\x34': b'\x09', # NOP
+        b'\x4B': b'\x0A', # UNARY_POSITIVE
+        b'\x52': b'\x0B', # UNARY_NEGATIVE
+        b'\x3C': b'\x0C', # UNARY_NOT
+        b'\x32': b'\x0F', # UNARY_INVERT
+        b'\x03': b'\x19', # BINARY_SUBSCR
+        b'\x30': b'\x2E', # GET_LEN
+        b'\x36': b'\x1F', # MATCH_MAPPING
+        b'\x3F': b'\x20', # MATCH_SEQUENCE
+        b'\x58': b'\x21', # MATCH_KEYS
+        b'\x23': b'\x23', # PUSH_EXC_INFO
+        b'\x30': b'\x24', # CHECK_EXC_MATCH
+        b'\x1E': b'\x25', # CHECK_EG_MATCH
+        b'\x24': b'\x31', # WITH_EXCEPT_START
+        b'\x40': b'\x32', # GET_AITER
+        b'\x19': b'\x33', # GET_ANEXT
+        b'\x3B': b'\x34', # BEFORE_ASYNC_WITH
+        b'\x13': b'\x35', # BEFORE_WITH
+        b'\x1A': b'\x36', # END_ASYNC_FOR
+        b'\x29': b'\x3C', # STORE_SUBSCR
+        b'\x0F': b'\x3D', # DELETE_SUBSCR
+        b'\x0C': b'\x44', # GET_ITER
+        b'\x10': b'\x45', # GET_YIELD_FROM_ITER
+        b'\x01': b'\x46', # PRINT_EXPR
+        b'\x1C': b'\x47', # LOAD_BUILD_CLASS
+        b'\x4A': b'\x4A', # LOAD_ASSERTION_ERROR
+        b'\x2A': b'\x4B', # RETURN_GENERATOR
+        b'\x1B': b'\x52', # LIST_TO_TUPLE
+        b'\x0D': b'\x53', # RETURN_VALUE
+        b'\x18': b'\x54', # IMPORT_STAR
+        b'\x3D': b'\x55', # SETUP_ANNOTATIONS
+        b'\x28': b'\x56', # YIELD_VALUE
+        b'\x42': b'\x57', # ASYNC_GEN_WRAP
+        b'\x09': b'\x58', # PREP_RERAISE_STAR
+        b'\x1F': b'\x59', # POP_EXCEPT
+        b'\x5A': b'\x5A', # STORE_NAME
+        b'\x82': b'\x5B', # DELETE_NAME
+        b'\xE9': b'\x5C', # UNPACK_SEQUENCE
+        b'\x6E': b'\x5D', # FOR_ITER
+        b'\xAE': b'\x5E', # UNPACK_EX
+        b'\xD5': b'\x5F', # STORE_ATTR
+        b'\x83': b'\x60', # DELETE_ATTR
+        b'\xE6': b'\x61', # STORE_GLOBAL
+        b'\xB9': b'\x62', # DELETE_GLOBAL
+        b'\xC1': b'\x63', # SWAP
+        b'\xCA': b'\x64', # LOAD_CONST
+        b'\xC4': b'\x65', # LOAD_NAME
+        b'\x7A': b'\x66', # BUILD_TUPLE
+        b'\xCD': b'\x67', # BUILD_LIST
+        b'\xE0': b'\x68', # BUILD_SET
+        b'\xCC': b'\x69', # BUILD_MAP
+        b'\xDE': b'\x6A', # LOAD_ATTR
+        b'\x77': b'\x6B', # COMPARE_OP
+        b'\xEC': b'\x6C', # IMPORT_NAME
+        b'\xED': b'\x6D', # IMPORT_FROM
+        b'\xB8': b'\x6E', # JUMP_FORWARD
+        b'\x65': b'\x6F', # JUMP_IF_FALSE_OR_POP
+        b'\x6D': b'\x70', # JUMP_IF_TRUE_OR_POP
+        b'\xBC': b'\x72', # POP_JUMP_FORWARD_IF_FALSE
+        b'\x86': b'\x73', # POP_JUMP_FORWARD_IF_TRUE
+        b'\x6C': b'\x74', # LOAD_GLOBAL
+        b'\x90': b'\x75', # IS_OP
+        b'\xDF': b'\x76', # CONTAINS_OP
+        b'\xAD': b'\x77', # RERAISE
+        b'\xDD': b'\x78', # COPY
+        b'\x7D': b'\x7A', # BINARY_OP
+        b'\x67': b'\x7B', # SEND
+        b'\x5E': b'\x7C', # LOAD_FAST
+        b'\x64': b'\x7D', # STORE_FAST
+        b'\x85': b'\x7E', # DELETE_FAST
+        b'\xA8': b'\x80', # POP_JUMP_FORWARD_IF_NOT_NONE
+        b'\x74': b'\x81', # POP_JUMP_FORWARD_IF_NONE
+        b'\x7B': b'\x82', # RAISE_VARARGS
+        b'\xE1': b'\x83', # GET_AWAITABLE
+        b'\xCE': b'\x84', # MAKE_FUNCTION
+        b'\x8C': b'\x85', # BUILD_SLICE
+        b'\xDC': b'\x86', # JUMP_BACKWARD_NO_INTERRUPT
+        b'\xA6': b'\x87', # MAKE_CELL
+        b'\xB1': b'\x88', # LOAD_CLOSURE
+        b'\x76': b'\x89', # LOAD_DEREF
+        b'\x96': b'\x8A', # STORE_DEREF
+        b'\x78': b'\x8B', # DELETE_DEREF
+        b'\x8E': b'\x8C', # JUMP_BACKWARD
+        b'\x8F': b'\x8E', # CALL_FUNCTION_EX
+        b'\xF0': b'\x90', # EXTENDED_ARG
+        b'\xA1': b'\x91', # LIST_APPEND
+        b'\xA9': b'\x92', # SET_ADD
+        b'\x9B': b'\x93', # MAP_ADD
+        b'\xC8': b'\x94', # LOAD_CLASSDEREF
+        b'\xC0': b'\x95', # COPY_FREE_VARS
+        b'\xD6': b'\x97', # RESUME
+        b'\x68': b'\x98', # MATCH_CLASS
+        b'\x70': b'\x9B', # FORMAT_VALUE
+        b'\x93': b'\x9C', # BUILD_CONST_KEY_MAP
+        b'\xC5': b'\x9D', # BUILD_STRING
+        b'\xE4': b'\xA2', # LIST_EXTEND
+        b'\x6A': b'\xA3', # SET_UPDATE
+        b'\x99': b'\xA4', # DICT_MERGE
+        b'\xD2': b'\xA5', # DICT_UPDATE
+        b'\xAC': b'\xA6', # PRECALL
+        b'\xE2': b'\xAB', # CALL
+        b'\xD3': b'\xAC', # KW_NAMES
+        b'\xA5': b'\xAD', # POP_JUMP_BACKWARD_IF_NOT_NONE
+        b'\x79': b'\xAE', # POP_JUMP_BACKWARD_IF_NONE
+        b'\xA3': b'\xAF', # POP_JUMP_BACKWARD_IF_FALSE
+        b'\x91': b'\xB0' # POP_JUMP_BACKWARD_IF_TRUE
+    }
+
+def get_typecode_map() -> dict:
+    return {
+        'TYPE_NULL': 48, # '0'/0x30 (0xb0)
+        'TYPE_NONE': 78, # 'N'/0x4e (0xce)
+        'TYPE_FALSE': 70, # 'F'/0x46 (0xc6)
+        'TYPE_TRUE': 84, # 'T'/0x54 (0xd4)
+        'TYPE_STOPITER': 83, # 'S'/0x53 (0xd3)
+        'TYPE_ELLIPSIS': 46, # '.'/0x2e (0xae)
+        'TYPE_INT': 105, # 'i'/0x69 (0xe9)
+        'TYPE_INT64': 73, # 'I'/0x49 (0xc9)
+        'TYPE_FLOAT': 102, # 'f'/0x66 (0xe6)
+        'TYPE_BINARY_FLOAT': 103, # 'g'/0x67 (0xe7)
+        'TYPE_COMPLEX': 120, # 'x'/0x78 (0xf8)
+        'TYPE_BINARY_COMPLEX': 121, # 'y'/0x79 (0xf9)
+        'TYPE_LONG': 108, # 'l'/0x6c (0xec)
+        'TYPE_STRING': 115, # 's'/0x73 (0xf3)
+        'TYPE_INTERNED': 116, # 't'/0x74 (0xf4)
+        'TYPE_REF': 114, # 'r'/0x72 (0xf2)
+        'TYPE_TUPLE': 40, # '('/0x28 (0xa8)
+        'TYPE_LIST': 91, # '['/0x5b (0xdb)
+        'TYPE_DICT': 123, # '{'/0x7b (0xfb)
+        'TYPE_CODE': 99, # 'c'/0x63 (0xe3)
+        'TYPE_UNICODE': 117, # 'u'/0x75 (0xf5)
+        'TYPE_UNKNOWN': 63, # '?'/0x3f (0xbf)
+        'TYPE_SET': 60, # '<'/0x3c (0xbc)
+        'TYPE_FROZENSET': 62, # '>'/0x3e (0xbe)
+        'FLAG_REF': 128, # ''/0x80 (0x80)
+        'TYPE_ASCII': 97, # 'a'/0x61 (0xe1)
+        'TYPE_ASCII_INTERNED': 65, # 'A'/0x41 (0xc1)
+        'TYPE_SMALL_TUPLE': 41, # ')'/0x29 (0xa9)
+        'TYPE_SHORT_ASCII': 122, # 'z'/0x7a (0xfa)
+        'TYPE_SHORT_ASCII_INTERNED': 90, # 'Z'/0x5a (0xda)
+    }
+
+def get_typecode_remap() -> dict:
+    return { }
