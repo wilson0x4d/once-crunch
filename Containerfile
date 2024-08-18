@@ -32,8 +32,8 @@ RUN /root/sys/install-buildtools.sh
 
 # tools (required)
 RUN apt-get -y install \
-    qemu-user-static curl \
-    imagemagick tar wget \
+    qemu-user-static curl tar wget \
+    imagemagick pngquant \
     bzip2 zstd lzop xz-utils lzma
 
 # python3 (required)

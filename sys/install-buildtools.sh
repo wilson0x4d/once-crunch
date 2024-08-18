@@ -7,4 +7,5 @@ apt-get -y --no-install-recommends --no-install-suggests install \
     git ssh gnupg \
     gcc-multilib g++-multilib \
     pkg-config equivs \
+    sqlite3 sqlite3-tools libsqlite3-dev \
     clang llvm lld
