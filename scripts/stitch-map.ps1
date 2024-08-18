@@ -36,7 +36,10 @@
 #
 # Example Usage:
 #
-# scripts/stich-map.ps1 -Path /data/out/ui/texpack/bigmap_res/map/8192 -Out /data/out/Nalcott.png
+# scripts/stitch-map.ps1 -Path /data/out/ui/texpack/bigmap_res/map/2048 -Out /data/out/Nalcott.png
+#
+# See Also:
+#   https://stackoverflow.com/a/66127712/131420
 #
 ##
 param(
@@ -57,12 +60,12 @@ function Stitch-Images($source, $destination) {
             Remove-Item -Force $destination
         }
     }
-    $ext = $destination.Replace([System.IO.Path]::GetFileNameWithoutExtension($destination), "")
+    $ext = [System.IO.Path]::GetFileName($destination).Replace([System.IO.Path]::GetFileNameWithoutExtension($destination), "")
     $max_x = 0
     $max_y = 0
-    $image_files = @(Get-ChildItem "$source\*_*$ext")
+    $image_files = @(Get-ChildItem "$source\*_*.png")
     for ($i = 0; $i -lt $image_files.Count; $i++) {
-        $noext = $image_files[$i].Name.Replace("$ext", "")
+        $noext = $image_files[$i].Name.Replace(".png", "")
         $parts = $noext.Split("_")
         $x = [int]::Parse($parts[0])
         $y = [int]::Parse($parts[1])
@@ -78,15 +81,13 @@ function Stitch-Images($source, $destination) {
     $imargs = @()
     for ($y = $max_y; $y -gt 0; $y--) {
         for ($x = 0; $x -lt $max_x; $x++) {
-            $imargs += "$source\$x`_$($y - 1)$ext"
+            $imargs += @("$source/$x`_$($y - 1).png")
         }
     }
     $imargs += "-tile"
     $imargs += "$max_x`x"
     $imargs += "-geometry"
     $imargs += "+0+0"
-    $imargs += "-quality"
-    $imargs += "74"
     if ($ext -eq ".png") {
         $imargs += "-define"
         $imargs += "png:compression-level=9"
