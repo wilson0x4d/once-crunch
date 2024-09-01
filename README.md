@@ -140,7 +140,22 @@ At its core Once Crunch is a series of python modules and it can be easily modif
 
 ## Next Steps
 
-You are encouraged to peruse the `scripts/` and `once-crunch/` directories. Scripts and code should be self-documenting. To get started, have a look at the `unpack-gamefiles.ps1` script.
+You are encouraged to peruse the `scripts/` and `once-crunch/` directories. Scripts and code should be self-documenting. To get started, have a look at the `unpack-gamefiles.ps1` script:
+
+### Enter the Python `venv` Shell
+
+```bash
+# from inside the container
+sys/init-venv.sh
+source sys/with-venv.sh
+```
+
+### Unpack Game Files
+
+```bash
+# from inside the container, inside a `venv` shell
+scripts/unpack-gamefiles.ps1 -Png -ImageRecolor -Exclude "mipmap.png,normal.png,albedo.png,control.png"
+```
 
 ## Why?
 
