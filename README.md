@@ -99,7 +99,7 @@ Unfortunately, downloading the game via `steamcmd` requires a login, but, the ga
 # from inside the container:
 #
 cd /root/code/once-crunch 
-scripts/auth-steam youraccount@email.com
+scripts/auth-steam.ps1 youraccount@email.com
 ```
 
 You will be prompted by `steamcmd` for your password, and if you have an authenticator (and you should) `steamcmd` will also prompt for an authenticator code.
@@ -113,7 +113,7 @@ After successful login you will not need to enter credentials again unless you r
 # from inside the container:
 #
 cd /root/code/once-crunch
-scripts/download-game.sh youraccount@email.com
+scripts/download-game.ps1 youraccount@email.com
 #
 # ... wait ...
 #
