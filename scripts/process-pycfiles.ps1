@@ -2,7 +2,9 @@
 # SPDX-FileCopyrightText: © 2024 Shaun Wilson
 # SPDX-License-Identifier: MIT
 #
-# deobfuscate-pycfiles.ps1
+# process-pycfiles.ps1
+#
+# scripts/process-pycfiles.ps1 pycdo/once-human.pycrules -Force
 #
 ##
 param(
