@@ -5,7 +5,7 @@
 set -eo pipefail
 apt-get -y install cmake
 # NOTE: installing own fork because of WIP edits that allow it to work
-git clone -b wip https://github.com/wilson0x4d/pycdc.git /root/code/pycdc
+git clone -b hacks https://github.com/wilson0x4d/pycdc.git /root/code/pycdc
 cd /root/code/pycdc
 cmake .
 make
