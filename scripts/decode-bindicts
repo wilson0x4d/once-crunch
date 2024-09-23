@@ -3,6 +3,9 @@
 # SPDX-License-Identifier: MIT
 #
 # A python script for decoding 'bindict' blobs extracted from python files.
+#
+# scripts/decode-bindicts /data/out/
+#
 ##
 
 import json
@@ -51,12 +54,12 @@ def decoder(b:bytes) -> dict | None:
         # read header
         count = int.from_bytes(b[rdi:rdi+8], 'little')
         rdi += 4
-        # d['_h_count'] = count
+        d['_h_count'] = count
         # read entry table
         tab:dict = {}
-        # d['_h_tab'] = tab
+        d['_h_tab'] = tab
         thead = 4 + ((count + 1) * 4)
-        # d['_h_thead'] = thead
+        d['_h_thead'] = thead
         tfoot = thead
         for i in range(count):
             f = int.from_bytes(b[rdi:rdi+4], 'little')
@@ -65,9 +68,9 @@ def decoder(b:bytes) -> dict | None:
             k = decode_str(b[thead+f:thead+t])
             tfoot += (t - f)
             tab[i] = k
-        # d['_h_tfoot'] = tfoot
-        # d['_f_b1'] = b[tfoot:tfoot+5].hex()
-        # d['_f_b2'] = b[tfoot+5:tfoot+10].hex()
+        d['_h_tfoot'] = tfoot
+        d['_f_b1'] = b[tfoot:tfoot+5].hex()
+        d['_f_b2'] = b[tfoot+5:tfoot+10].hex()
         return d
     except Exception as ex:
         print(f'Decode Error: {ex}')
@@ -97,9 +100,7 @@ for item in os.walk(__path):
                 file_content = in_file.read()
             result = decoder(file_content)
             if None != result:
-                # print(f'{result["_f_b1"]} {result["_f_b2"]} << {filename}')
                 j = json.dumps(result, indent='  ')
-                # print(j)
                 with open(out_filepath, 'wt') as out_file:
                     out_file.write(j)
     if None != __restrict_to_filename:
