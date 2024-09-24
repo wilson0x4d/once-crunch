@@ -51,11 +51,11 @@ function Recursive-Unpack($path, $out_path) {
                 $arg_list += @("--img-format webp")
             } elseif ($Png.IsPresent) {
                 $arg_list += @("--img-format png")
-            } 
+            }
             if ($ImageRecolor.IsPresent) {
                 $arg_list += @("--recolor")
             }
-            if ($Null -ne $Exclude) {
+            if ($null -ne $Exclude -and ![string]::IsNullOrWhiteSpace($Exclude)) {
                 $arg_list += @("--exclude", $Exclude)
             }
             $arg_list += @(
