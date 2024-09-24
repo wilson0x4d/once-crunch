@@ -24,7 +24,7 @@ You could forego these pre-reqs, you will however need to perform dependent task
 
 ### Storage
 
-At the time of this writing, the game requires approximately 50GiB of storage. Once Crunch will consume an additional 100-200GiB of storage depending on how you use it. When running the container you should specify a "data directory" parameter to a directory on a storage volume which has sufficient space.
+At the time of this writing, the game requires approximately 50GiB of storage. Once Crunch will consume an additional 100-200GiB of storage depending on how you use it. When running the container you should pass a "data directory" parameter (`-DataDir`) specifying a directory on a storage volume which has sufficient space.
 
 ### Containers
 
@@ -159,7 +159,7 @@ scripts/unpack-gamefiles.ps1 -Png -ImageRecolor -Exclude "mipmap.png,normal.png,
 
 ## Why?
 
-For fun. Once Human is an engaging gaming experience, and this work benefits the gaming community, both game players and game publishers, by enhancing that experience through value-added technical resources that otherwise would not be possible (or, would exist with a much degraded level of quality which would reflect poorly on the game.)
+For fun. Once Human is an engaging gaming experience, and this work benefits the gaming community, both game players and the game devs, by enhancing that experience through value-added resources that otherwise would not be possible (or, would exist with a much degraded level of quality which would reflect poorly on the game.)
 
 ## Conclusion
 

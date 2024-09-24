@@ -18,7 +18,7 @@ for arg; do
     fi
     if [[ "expect-next" == $DATA_DIR ]]; then
         DATA_DIR=$arg
-    end
+    fi
 done
 
 # determine datadir
@@ -29,7 +29,7 @@ if [[ "" == "$DATA_DIR" ]]; then
     # personal convenience so i can access the 
     # repo from within the container.
     DATA_DIR=$(realpath "$PWD/..")
-    echo "You did not provide a data directory argument.\nThe data directory is defaulted to: \n$DATA_DIR"
+    echo $'You did not provide a data directory argument.\nThe data directory is defaulted to: \n$DATA_DIR'
 fi
 
 # run container
@@ -38,5 +38,5 @@ if [ 1 -eq $NON_INTERACTIVE_MODE ]; then
 elif [ 1 -eq $ATTACH_MODE ]; then
     podman exec -it "ci-once-crunch" /bin/bash --rcfile 'sys/with-venv.sh'
 else
-    podman run -it --rm -d -v "$DATA_DIR:/data" --name "ci-once-crunch" --platform "linux/amd64" localhost/once-crunch:latest /bin/bash --rcfile 'sys/with-venv.sh'
+    podman run -it --rm -v "$DATA_DIR:/data" --name "ci-once-crunch" --platform "linux/amd64" localhost/once-crunch:latest /bin/bash --rcfile 'sys/with-venv.sh'
 fi

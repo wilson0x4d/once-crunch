@@ -4,3 +4,8 @@ __pycache__
 .vscode/
 .venv/
 deps/
+ssh/
+gitconfig
+git-signing-keys.gpg
+poetry.lock
+dist/
