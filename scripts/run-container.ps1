@@ -57,7 +57,8 @@ if ($NonInteractive.IsPresent) {
         "-e", "DISPLAY=$(@([Net.DNS]::GetHostAddresses([Environment]::MachineName) | Where-Object { $_.AddressFamily -eq "InterNetwork" })[0].ToString()):0",
         "--platform", "linux/amd64",
         "--name", "$ContainerName",
-        "localhost/once-crunch:latest"
+        "localhost/once-crunch:latest",
+        "/bin/bash", "--rcfile", "sys/with-venv.sh"
     )
     Start-Process "podman" -ArgumentList $ArgList -NoNewWindow -Wait
 }
