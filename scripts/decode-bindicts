@@ -11,31 +11,7 @@
 import json
 import os
 import sys
-
-if len(sys.argv) < 2:
-    print('required path argument not provided, aborting.')
-    exit(3)
-
-__path:str = None
-__force:bool = False
-
-for arg in sys.argv[1:]:
-    match arg:
-        case '--force' | '-f':
-            __force = True
-        case _:
-            if arg.startswith('-'):
-                print('unrecognized command-line option `{arg}`, aborting.')
-                exit(4)
-            elif None != __path:
-                print('unexpected positional argument `{arg}`, aborting.')
-                exit(5)
-            else:
-                __path = arg
-
-if not os.path.isdir(__path) and not os.path.isfile(__path):
-    print(f'Provided path is invalid: {__path}')
-    exit(1)
+import time
 
 def decode_str(b:bytes, encodings = ['utf8', 'utf16']) -> str:
     for encoding in encodings:
@@ -48,60 +24,136 @@ def decode_str(b:bytes, encodings = ['utf8', 'utf16']) -> str:
     return str(b)
 
 def decoder(b:bytes) -> dict | None:
+    # bindict format
+    # [0:4] == entry table entry count
+    # [4:4 + (4 * entry count)] == entry table indexes
+    # [4 + (4 * entry count):4 + (4 * entry count) + 4] == entry table blob size
+    # [4 + (4 * entry count) + 4:4 + (4 * entry count) + 4 + entry table blob size] == entry table blob
+    # [4 + (4 * entry count) + 4 + entry table blob size] == "footer blob"
     try:
         rdi = 0
         d:dict = {}
+        d['size'] = len(b)
         # read header
-        count = int.from_bytes(b[rdi:rdi+8], 'little')
+        table_entry_count = int.from_bytes(b[rdi:rdi+8], 'little')
         rdi += 4
-        d['_h_count'] = count
         # read entry table
         tab:dict = {}
-        d['_h_tab'] = tab
-        thead = 4 + ((count + 1) * 4)
-        d['_h_thead'] = thead
+        d['tab'] = tab
+        thead = 4 + ((table_entry_count) * 4) + 4
         tfoot = thead
-        for i in range(count):
-            f = int.from_bytes(b[rdi:rdi+4], 'little')
+        for i in range(table_entry_count):
+            h = int.from_bytes(b[rdi:rdi+4], 'little')
             t = int.from_bytes(b[rdi+4:rdi+8], 'little')
+            tfoot = (thead+t)
             rdi += 4
-            k = decode_str(b[thead+f:thead+t])
-            tfoot += (t - f)
-            tab[i] = k
-        d['_h_tfoot'] = tfoot
-        d['_f_b1'] = b[tfoot:tfoot+5].hex()
-        d['_f_b2'] = b[tfoot+5:tfoot+10].hex()
+            # is every value really a string?
+            sval = decode_str(b[thead+h:thead+t])            
+            tab[i] = {
+                'v': sval,
+                'z': (t - h),
+                'b': (thead + h),
+                'e': (thead + t)
+            }
+        table_blob_size = int.from_bytes(b[rdi:rdi+4], 'little')
+        rdi += 4
+        # the header blob, this is fully decoded
+        d['_header'] = {
+            'offset': 0,
+            'size': thead,
+            'table_entry_count': table_entry_count,
+            'table_entry_offsets': b[4:rdi].hex(),
+            'table_blob_size': table_blob_size
+        }
+        # the entry table blob, this is fully decoded
+        d['_table'] = {
+            'offset': thead,
+            'size': tfoot-thead,
+            'd': b[thead:tfoot].hex()
+        }
+        # the footer blob
+        # TODO: this is not decoded at all
+        d['_footer'] = {
+            'offset': tfoot,
+            'size': (len(b) - tfoot),
+            'd': b[tfoot:].hex()
+        }
+        # NOTE: these are two sample blobs directly following
+        #       the entry table. these are extracted separately 
+        #       for analytic purposes to determine if they are
+        #       secondary headers.
+        #
+        #       there does appear to be a pattern to the data, but
+        #       so far has not been decoded.
+        #
+        d['_footer']['bin1'] = b[tfoot:tfoot+5].hex()
+        d['_footer']['bin2'] = b[tfoot+5:tfoot+10].hex()
         return d
     except Exception as ex:
         print(f'Decode Error: {ex}')
         return None
 
-__restrict_to_filename:str = None
-if os.path.isfile(__path):
-    __path, __restrict_to_filename = os.path.split(__path)
+def main():
+    if len(sys.argv) < 2:
+        print('required path argument not provided, aborting.')
+        exit(3)
 
-for item in os.walk(__path):
-    dirname = item[0]
-    print(f'{dirname}\x1b[0J')
-    filenames = item[2]
-    if None != __restrict_to_filename:
-        filenames = [ __restrict_to_filename ]
-    i = 0
-    for filename in filenames:
-        i += 1
-        filepath = os.path.join(dirname, filename)
-        if filepath.endswith('.bindict'):
-            print(f'[{i}/{len(filenames)}] {filename}\x1b[0J', end='\r')
-            out_filepath = f'{filepath}.json'
-            if not __force and os.path.isfile(out_filepath):
-                continue
-            file_content:str
-            with open(filepath, 'rb') as in_file:
-                file_content = in_file.read()
-            result = decoder(file_content)
-            if None != result:
-                j = json.dumps(result, indent='  ')
-                with open(out_filepath, 'wt') as out_file:
-                    out_file.write(j)
-    if None != __restrict_to_filename:
-        break
+    __path:str = None
+    __force:bool = False
+
+    for arg in sys.argv[1:]:
+        match arg:
+            case '--force' | '-f':
+                __force = True
+            case _:
+                if arg.startswith('-'):
+                    print('unrecognized command-line option `{arg}`, aborting.')
+                    exit(4)
+                elif None != __path:
+                    print('unexpected positional argument `{arg}`, aborting.')
+                    exit(5)
+                else:
+                    __path = arg
+
+    if not os.path.isdir(__path) and not os.path.isfile(__path):
+        print(f'Provided path is invalid: {__path}')
+        exit(1)
+
+    count = 0
+    ts = time.time()
+    __restrict_to_filename:str = None
+    if os.path.isfile(__path):
+        __path, __restrict_to_filename = os.path.split(__path)
+
+    for item in os.walk(__path):
+        dirname = item[0]
+        print(f'{dirname}\x1b[0J')
+        filenames = item[2]
+        if None != __restrict_to_filename:
+            filenames = [ __restrict_to_filename ]
+        i = 0
+        for filename in filenames:
+            i += 1
+            filepath = os.path.join(dirname, filename)
+            if filepath.endswith('.bindict'):
+                count += 1
+                print(f'[{i}/{len(filenames)}] {filename}\x1b[0J', end='\r')
+                out_filepath = f'{filepath}.json'
+                if not __force and os.path.isfile(out_filepath):
+                    continue
+                file_content:str
+                with open(filepath, 'rb') as in_file:
+                    file_content = in_file.read()
+                result = decoder(file_content)
+                if None != result:
+                    j = json.dumps(result, indent='  ')
+                    with open(out_filepath, 'wt') as out_file:
+                        out_file.write(j)
+        if None != __restrict_to_filename:
+            break
+    ts = time.time() - ts
+    print(f'Done. count={count}, took={ts:.1f}s')
+
+
+if __name__ == '__main__':
+    main()
