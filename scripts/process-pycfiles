@@ -1,0 +1,108 @@
+#!/usr/bin/env python3
+# SPDX-FileCopyrightText: © 2024 Shaun Wilson
+# SPDX-License-Identifier: MIT
+#
+# scripts/process-pycfiles --force --rules pycdo/once-human.pycrules --target /data/out
+#
+##
+
+import os
+import subprocess
+from appsettings2 import *
+
+def deobfuscatePycFile(pycFilename:str, pycrulesFilename:str):
+    pycdoFilename = pycFilename.replace('.pyc', '.pycdo')
+    if os.path.isfile(pycdoFilename):
+        os.remove(pycdoFilename)
+    p = subprocess.Popen([
+        'pycdo',
+        '--rules', pycrulesFilename,
+        pycFilename, pycdoFilename,
+        '--force', '--silent'
+    ])
+    p.wait()
+    return pycdoFilename
+
+def disassemblePycFile(pycFilename:str):
+    pyasmFilename = pycFilename.replace('.pyc', '.pyasm')
+    if os.path.isfile(pyasmFilename):
+        os.remove(pyasmFilename)
+    with open(pyasmFilename, 'wb') as pyasmFile:
+        p = subprocess.Popen(
+            [
+                'pycdas',
+                pycFilename
+            ],
+            stdout=pyasmFile.fileno(),
+            stderr=pyasmFile.fileno())
+        p.wait()
+
+def decompilePycFile(pycFilename:str):
+    pyFilename = pycFilename.replace('.pyc', '.py')
+    if os.path.isfile(pyFilename):
+        os.remove(pyFilename)
+    with open(pyFilename, 'wb') as pyFile:
+        p = subprocess.Popen(
+            [
+                'pycdc',
+                pycFilename
+            ],
+            stdout=pyFile.fileno(),
+            stderr=pyFile.fileno())
+        p.wait()
+
+def processDirectory(target:str, pycrulesFilename:str, force:bool):
+    for dname, dlist, flist in os.walk(target):
+        print(f'Processing pycfiles in: {dname}', end='\x1b[0J\r')
+        for child in flist:
+            pycFilename = os.path.join(dname, child)
+            pycbackFilename = pycFilename.replace('.pyc', '.pycbak')
+            if pycFilename.endswith('.pyc'):
+                print(f'>> {pycFilename}')
+                if os.path.isfile(pycbackFilename):
+                    if not force:
+                        # backup file suggests pyc is already deobfsucated, skip.
+                        continue
+                    else:
+                        # forced reprocessing requires some addt'l init
+                        if os.path.isfile(pycbackFilename):
+                            os.remove(pycFilename)
+                            os.rename(pycbackFilename, pycFilename)
+                # backup original
+                if not os.path.isfile(pycbackFilename):
+                    with open(pycbackFilename, 'wb') as pycbackFile, open(pycFilename, 'rb') as pycFile:
+                        buf = pycFile.read()
+                        pycbackFile.write(buf)
+                        pycbackFile.flush()
+                # run through pycdo
+                pycdoFilename = deobfuscatePycFile(pycFilename, pycrulesFilename)
+                # no output?
+                if not os.path.isfile(pycdoFilename):
+                    print(f'\n!! failed to deobfuscate: {pycFilename}')
+                    continue
+                # make primary
+                if os.path.isfile(pycdoFilename):
+                    os.remove(pycFilename)
+                    os.rename(pycdoFilename, pycFilename)
+                # run through disassembler
+                disassemblePycFile(pycFilename)
+                # run through decompiler
+                decompilePycFile(pycFilename)
+
+if __name__ == '__main__':
+    # build config
+    config = ConfigurationBuilder()\
+        .addEnvironment()\
+        .addCommandLine()\
+        .build()
+    
+    # enforce defaults
+    config.set('force', config.get('force', False))
+    config.set('target', config.get('target', '/data/out'))
+    config.set('rules', config.get('rules', 'pycdo/once-human.pycrules'))
+
+    if not os.path.isfile(config.rules):
+        print(f'Rules file is missing or inaccessible: {config.rules}')
+        exit(1)
+
+    processDirectory(config.get('target'), config.get('rules'), config.get('force'))
