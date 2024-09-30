@@ -45,21 +45,21 @@ RUN apt-get -y install \
     imagemagick pngquant \
     bzip2 zstd lzop xz-utils lzma
 
-# python3 (required)
-RUN /root/sys/install-python.sh
-# pwsh (for cross-platform scripts)
-RUN /root/sys/install-pwsh.sh
-# pvrtextool (for texture conversion)
-RUN /root/sys/install-pvrtextool.sh
-# pycdc (for pyc decompilation)
-RUN /root/sys/install-pycdc.sh
-
 # Once Crunch (required, scripts/tools)
 RUN git clone $ONCE_CRUNCH_REMOTE /root/code/once-crunch
 
 # pycdo (to deobfuscate pycfiles)
 RUN git clone $PYCDO_REMOTE /root/code/pycdo && \
     ln -s "/root/code/pycdo/src/pycdo" "/usr/bin/pycdo"
+
+# pwsh (for cross-platform scripts)
+RUN /root/sys/install-pwsh.sh
+# pvrtextool (for texture conversion)
+RUN /root/sys/install-pvrtextool.sh
+# python3 (required)
+RUN /root/sys/install-python.sh
+# pycdc (for pyc decompilation)
+RUN /root/sys/install-pycdc.sh
 
 # steamcmd (to download game files)
 RUN /root/sys/install-steamcmd.sh
