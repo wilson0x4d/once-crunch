@@ -73,20 +73,20 @@ Remove-item -Recurse -Force "$context/.venv" 2>&1 | Out-Null
 # }
 
 # this is a required third-party dependency. download
-# it yourself and make sure the name here matches
+# it yourself (the linux binary) and make sure the name here matches
 # your downloaded filename. i only tested with "2024_R1"
 #
 # https://developer.imaginationtech.com/downloads/
 #
 mkdir -p "$context/deps" 2>&1 | Out-Null
 if (![IO.File]::Exists("$context/deps/PVRTexToolSetup")) {
-    if (![IO.File]::Exists("$env:HOME/Downloads/PVRTexToolSetup-2024_R1.run-x64")) {
+    if (![IO.File]::Exists("$env:HOME/Downloads/PVRTexToolSetup.run-x64")) {
         Write-Error "Setup file for PVRTexTool not found."
         Write-Error "Download from: https://developer.imaginationtech.com/downloads/"
-        Write-Error "Copy into $HOME/Downloads with name: PVRTexToolSetup-2024_R1.run-x64"
+        Write-Error "Copy into $HOME/Downloads with name: PVRTexToolSetup.run-x64"
         return
     }
-    Copy-item "$env:HOME/Downloads/PVRTexToolSetup-2024_R1.run-x64" "$context/deps/PVRTexToolSetup"
+    Copy-item "$env:HOME/Downloads/PVRTexToolSetup.run-x64" "$context/deps/PVRTexToolSetup"
 }
 
 # build the container
