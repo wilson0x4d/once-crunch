@@ -29,7 +29,8 @@ if [[ "" == "$DATA_DIR" ]]; then
     # personal convenience so i can access the 
     # repo from within the container.
     DATA_DIR=$(realpath "$PWD/..")
-    echo $'You did not provide a data directory argument.\nThe data directory is defaulted to: \n$DATA_DIR'
+    echo $'You did not provide a data directory argument.\nThe data directory is defaulted to:'
+    echo "$DATA_DIR"
 fi
 
 # run container

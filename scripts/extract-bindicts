@@ -11,6 +11,7 @@
 import os
 import re
 import sys
+import time
 
 if len(sys.argv) < 2:
     print('required path argument not provided, aborting.')
@@ -81,6 +82,8 @@ def decoder(b:str):
             i += 1
     return arr
 
+problemFiles = []
+
 for item in os.walk(__path):
     dirname = item[0]
     print(f'{dirname}\x1b[0J')
@@ -95,10 +98,23 @@ for item in os.walk(__path):
             if not __force and os.path.isfile(out_filepath):
                 continue
             file_content:str
-            with open(filepath, 'rt') as in_file:
-                file_content = in_file.read()
+            with open(filepath, 'rb') as in_file:
+                buf = in_file.read()
+                try:
+                    file_content = buf.decode('utf-8')
+                except:
+                    try:
+                        file_content = buf.decode('utf-16')
+                    except:
+                        problemFiles.append(filepath)
+                        print(f'\nError loading file: {filepath}')
             match = __re_bindict.search(file_content)
             if None != match:
                 result = decoder(match.group(1))
                 with open(out_filepath, 'wb') as out_file:
                     out_file.write(result)
+
+if len(problemFiles) > 0:
+    print(f'Problem Files: {len(problemFiles)}')
+    for e in problemFiles:
+        print(f'\t{e}')
