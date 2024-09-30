@@ -24,16 +24,16 @@ for arg; do
     fi
 done
 
-if [ 1 -eq $DEV_MODE ]; then
-    cp -rf $HOME/.ssh $context/ssh
-    cp -f $HOME/git-signing-keys.gpg $context/git-signing-keys.gpg
-    cp -f $HOME/.gitconfig $context/gitconfig    
-else
-    mkdir -p "$context/ssh" 2>&1 | Out-Null
-    echo "" > "$context/ssh/not-configured"
-    echo "" > "$context/gitconfig"
-    echo "" > "$context/git-signing-keys.gpg"
-fi
+# if [ 1 -eq $DEV_MODE ]; then
+#     cp -rf $HOME/.ssh $context/ssh
+#     cp -f $HOME/git-signing-keys.gpg $context/git-signing-keys.gpg
+#     cp -f $HOME/.gitconfig $context/gitconfig    
+# else
+#     mkdir -p "$context/ssh" 2>&1 | Out-Null
+#     echo "" > "$context/ssh/not-configured"
+#     echo "" > "$context/gitconfig"
+#     echo "" > "$context/git-signing-keys.gpg"
+# fi
 
 # this is a required third-party dependency. download
 # it yourself and make sure the name here matches

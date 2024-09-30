@@ -9,9 +9,9 @@ ADD deps /root/deps
 ADD sys /root/sys
 RUN chmod 770 /root/sys/*.sh
 
-ADD ssh/ /root/.ssh
-RUN chmod 600 /root/.ssh/*
-ADD gitconfig /root/.gitconfig
+# ADD ssh/ /root/.ssh
+# RUN chmod 600 /root/.ssh/*
+#ADD gitconfig /root/.gitconfig
 
 # required apt updates
 RUN cp -f /root/sys/build-dpkgequiv.sh /usr/local/bin/build-dpkgequiv && \
@@ -27,8 +27,9 @@ RUN apt-mark hold python3 && \
     apt-get -y upgrade
 
 # gnupg (optional, for commit signing or pulling from the private repo)
-ADD git-signing-keys.gpg /root/git-signing-keys.gpg
-RUN apt-get -y --no-install-recommends --no-install-suggests install git ssh gnupg && if [ `stat --printf="%s" /root/git-signing-keys.gpg` -gt 10 ]; then gpg --import /root/git-signing-keys.gpg; fi
+# ADD git-signing-keys.gpg /root/git-signing-keys.gpg
+RUN apt-get -y --no-install-recommends --no-install-suggests install git ssh gnupg
+# && if [ `stat --printf="%s" /root/git-signing-keys.gpg` -gt 10 ]; then gpg --import /root/git-signing-keys.gpg; fi
 
 # quality of life (optional)
 RUN apt-get -y --no-install-recommends --no-install-suggests install aptitude htop man nano tmux && \
