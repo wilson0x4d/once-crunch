@@ -14,11 +14,13 @@ A containerized toolchain for data mining the game "Once Human."
 
 ### Prerequisites
 
-You should be able to use Windows, Linux, or macOS as a "Host environment". The scripts provided expect the environment has the following:
+You should be able to use Windows, Linux, or macOS as a "Host environment", with the exception that "Apple Silicon" has a broken "applehv" implementation and certain tools will not work correctly (container image will fail, and importing an image from another host will not allow the affected tools to work.)
+
+The scripts provided expect the environment has the following:
 
 - [Podman](https://podman.io/); a cross-platform tool that manages containers, pods, and images.
 - [Git](https://git-scm.com/); a free and open source distributed version control system.
-- [PowerShell](https://github.com/PowerShell/PowerShell) or `bash`, the PowerShell scripts will run on Windows, Linux, and macOS. For bootstrapping/installation steps both `pwsh` and `bash` scripts are provided. Internal to the container sometimes only one or the other exists for a particular purpose.
+- [PowerShell](https://github.com/PowerShell/PowerShell) or `bash`, the PowerShell scripts will run on Windows, Linux, and macOS. For bootstrapping/installation steps both `pwsh` and `bash` scripts are provided. Internal to the container most scripts have been updated to use Python.
 
 You could forego these pre-reqs, you will however need to perform dependent tasks manually through alternative means.
 
@@ -59,6 +61,24 @@ podman image ls
 #
 # you should see `localhost/once-crunch`
 #
+```
+
+## Usage
+
+Once Crunch is designed to be expanded over time. In its current state it is capable of:
+
+- Processing game files and extracting all assets.
+- Constructing a hierarchical copy of assets.
+- Converting all textures into PNG, WEBP, or JPG.
+- Post-processing converted textures.
+
+Making use of Once Crunch is a matter of running one or more scripts and inspecting the results.
+
+At its core Once Crunch is a series of python modules wrapped by shell scripts, and it can be easily modified to operate on data from any game.
+
+To get started you will run the container, which should drop you into a `venv` shell:
+
+```bash
 # run the container image..
 #
 scripts/run-container.ps1
@@ -69,7 +89,7 @@ scripts/run-container.ps1
 # required as long as you have sufficient
 # storage available where you've cloned the
 # repo. By default the container will use the
-# parent directory of the repo (not the repo
+# PARENT DIRECTORY of the repo (not the repo
 # directory) for storing files.
 #
 # if successful you should see a container shell.
@@ -84,7 +104,7 @@ Once Crunch does not contain a copy of any game files. You will need to acquire 
 
 #### Manual Installation/Copying
 
-If you manually install/copy the game files you should know that Once Crunch expected the root of the game to be the directory `/data/once-human` inside of the container, and, the `-DataDir` parameter you pass to `run-container.ps1` gets mapped to `/data/` (too obvious?) If you followed the instructions above the "once-human" directory should exist side-by-side with the "once-crunch" directory created by `git clone`.
+If you manually install/copy the game files you should know that Once Crunch expects the root of the game to be the directory `/data/once-human` inside of the container, and, the `-DataDir` parameter you pass to `run-container.ps1` gets mapped to `/data/` (too obvious?) If you followed the instructions above the "once-human" directory should exist side-by-side with the "once-crunch" directory created by `git clone`.
 
 #### Using `steamcmd`
 
@@ -115,7 +135,7 @@ After successful login you will not need to enter credentials again unless you r
 cd /root/code/once-crunch
 scripts/download-game.ps1 youraccount@email.com
 #
-# ... wait ...
+# ... "a few minutes later" ...
 #
 ll /data/once-human
 #
@@ -123,43 +143,42 @@ ll /data/once-human
 #
 ```
 
-At this point you now how Once Crunch installed and the game files downloaded.
-
-## Usage
-
-Once Crunch is designed to be functionally expanded over time. In its current state it is capable of:
-
-- Processing game files and extracting all assets.
-- Constructing a hierarchical copy of assets.
-- Converting all textures into PNG, WEBP, or JPG.
-- Post-processing converted textures.
-
-Making use of Once Crunch is a matter of running one or more scripts and inspecting the results.
-
-At its core Once Crunch is a series of python modules and it can be easily modified to operate on data from any game.
-
-## Next Steps
-
-You are encouraged to peruse the `scripts/` and `once-crunch/` directories. Scripts and code should be self-documenting. To get started, have a look at the `unpack-gamefiles.ps1` script:
-
-### Enter the Python `venv` Shell
-
-```bash
-# from inside the container
-sys/init-venv.sh
-source sys/with-venv.sh
-```
+At this point you now have Once Crunch installed and the game files available.
 
 ### Unpack Game Files
 
 ```bash
-# from inside the container, inside a `venv` shell
-scripts/unpack-gamefiles.ps1 -Png -ImageRecolor -Exclude "mipmap.png,normal.png,albedo.png,control.png"
+#
+# from inside the container
+#
+scripts/unpack-gamefiles --png --image-recolor --exclude "mipmap.png,normal.png,albedo.png,control.png"
+```
+
+### Deobfuscate, Disassemble, and Decompile PYC Files
+
+```bash
+#
+# from inside the container
+#
+scripts/process-pycfiles --force --rules pycdo/once-human.pycrules --target /data/out
+#
+# when complete you will have some "*.pycbak" files which
+# are copies of the origina "*.pyc" files. You will also
+# have some "*.pyasm" and "*.py" files.
+#
+# Worth pointing out that the decompiler used is `pycdc` which
+# has a lot of problems on any pyc newer than Python 3.10, thus
+# this toolchain is using a MODIFIED version of pycdc to get the
+# results it does. While the pyasm files should be 100% accurate
+# and complete, the resulting py files are mostly invalid (will
+# not recompile) -- still, the results are enough as a learning
+# aid.
+#
 ```
 
 ## Why?
 
-For fun. Once Human is an engaging gaming experience, and this work benefits the gaming community, both game players and the game devs, by enhancing that experience through value-added resources that otherwise would not be possible (or, would exist with a much degraded level of quality which would reflect poorly on the game.)
+For fun. Once Human is an engaging gaming experience and this work benefits the gaming community, both game players and the game devs, by enhancing that experience through value-added resources that otherwise would not be possible (or, would exist with a much degraded level of quality which would reflect poorly on the game.)
 
 ## Conclusion
 

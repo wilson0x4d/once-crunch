@@ -1,0 +1,125 @@
+#!/usr/bin/env python3
+# SPDX-FileCopyrightText: © 2024 Shaun Wilson
+# SPDX-License-Identifier: MIT
+#
+# A python script for extracting 'bindict' blobs from python files.
+#
+# scripts/unpack-gamefiles --force --image-recolor --png --exclude "mipmap.png,normal.png,albedo.png,control.png" /data/once-human/
+#
+##
+#
+# All args are optional.
+#
+# For the fastest unpack run with no args, it will assume
+# the game files location to be /data/once-human/ and will
+# extract all files as-is (no post-processing.)
+# 
+# --jpg, --webp, and --png are mutually exclusive options
+#
+##
+
+import os
+import subprocess
+import sys
+
+verbose:bool = False
+force:bool = False
+jpg:bool = False
+webp:bool = False
+png:bool = False
+imageRecolor:bool = False
+exclude:str = None
+extractExclude:bool = False
+gameFilesDirectory:str = '/data/once-human/'
+outputDirectory:str = '/data/out'
+
+for i in range(1, len(sys.argv)):
+    arg = sys.argv[i]
+    if extractExclude:
+        extractExclude = False
+        exclude = arg
+        continue
+    match arg:
+        case '--help' | '-h' | '/?':
+            print(
+"""
+Usage:
+    unpack-gamefiles [--help]
+                     [--force]
+                     [--jpg|--webp|--png] [--image-recolor]
+                     [--exclude "csv-string"]
+                     [game-files-direcotry]
+
+Options:
+    --help
+        Displays this help, then exits.
+    --force
+        Forces processing of files that already exist,
+        the default is to not recreate/reprocess
+        files that have already been created/processed.
+    --jpg
+        Convert PVRs to JPG format.
+    --webp
+        Convert PVRs to WEBP format.
+    --png
+        Convert PVRs to PNG format.
+    --image-recolor
+        Recolor images.
+    --exclude "csv-string"
+        CSV string of exlusions. Any filepath that substring
+        matches one of the string in the CSV will be skipped
+        from further processing. Useful for avoiding processing
+        of normal maps/etc.
+    game-files-direcotry
+        Indicates the root of the game files directory.
+        Defaults to "/data/once-human"
+""")
+            exit(0)
+        case '--force':
+            force = True
+        case '--jpg':
+            jpg = True
+            webp = False
+            png = False
+        case '--webp':
+            jpg = False
+            webp = True
+            png = False
+        case '--png':
+            jpg = False
+            webp = False
+            png = True
+        case '--image-recolor':
+            imageRecolor = True
+        case '--exclude':
+            extractExclude = True
+        case _:
+            if os.path.isdir(arg):
+                gameFilesDirectory = arg
+            else:
+                raise Exception(f'unexpected/invalid parameter: {arg}')
+
+pbaseargs = [ 'python', '-m', 'once-crunch' ]
+if force:
+    pbaseargs.append('-f')
+if verbose:
+    pbaseargs.append('-v')
+if jpg:
+    pbaseargs += [ '--img-format', 'jpg' ]
+elif webp:
+    pbaseargs += [ '--img-format', 'webp' ]
+elif png:
+    pbaseargs += [ '--img-format', 'png' ]
+if imageRecolor:
+    pbaseargs.append('--recolor')
+if exclude is not None:
+    pbaseargs += [ '--exclude', exclude ]
+pbaseargs += [ 'unpack', '--format', 'nxpk' ]
+
+for dname, dlist, flist in os.walk(gameFilesDirectory):
+    for fname in flist:
+        filepath = os.path.join(dname, fname)
+        if filepath.endswith('.npk'):
+            pargs = pbaseargs + [ filepath, outputDirectory ]
+            p = subprocess.Popen(pargs)
+            p.wait()
