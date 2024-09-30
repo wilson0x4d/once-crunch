@@ -176,6 +176,31 @@ scripts/process-pycfiles --force --rules pycdo/once-human.pycrules --target /dat
 #
 ```
 
+### Extract and Decode "bindict" Data
+
+### Unpack Game Files
+
+```bash
+#
+# from inside the container
+#
+scripts/extract-bindicts /data/out/
+#
+# ... "a few minutes later" ...
+#
+scripts/decode-bindicts /data/out/
+#
+# ... "a file minutes later" ...
+#
+# You will now have some "*.json" files that contain
+# some extracts of bindict blob contents. Note that
+# these are not full extracts of all data in the blob,
+# only of the entry tables. If you have any advice on
+# how to extract/treat the remaining data, or a better
+# way of keying the entry table, let me know.
+#
+```
+
 ## Why?
 
 For fun. Once Human is an engaging gaming experience and this work benefits the gaming community, both game players and the game devs, by enhancing that experience through value-added resources that otherwise would not be possible (or, would exist with a much degraded level of quality which would reflect poorly on the game.)
@@ -187,5 +212,9 @@ Keep in mind that with power comes responsibility.
 Just because you can legally ACCESS data does not mean you can legally USE data.
 
 **Do not publish any data without first consulting a lawyer on FAIR USE, COPYRIGHT LAW, DMCA, and any local or international laws you may be subject to.**
+
+## Contact
+
+As usual you can contact me in Discord or submit an issue on Github.
 
 Enjoy!
